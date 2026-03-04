@@ -1,0 +1,82 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PacientesController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\RecepcionistaController;
+use App\Http\Controllers\MedicoController;
+
+
+Route::get('/', function () {
+    return view('welcome');
+})->name('index');
+
+# Rotas de autenticação
+
+Route::get('/register', [AuthController::class, 'register'])->name('register');
+
+Route::post('/store_register', [AuthController::class, 'store_register'])->name('auth-register');
+
+route::get('/login', [AuthController::class, 'login'])->name('login');
+
+route::post('/store_login', [AuthController::class, 'store_login'])->name('auth-login');
+
+route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
+#rotas de admin
+
+route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+
+route::get('/admin/pacientes', [AdminController::class, 'list_pacientes'])->name('admin.pacientes');
+
+route::get("/admin/recepcionistas", [RecepcionistaController::class, 'index'])->name('admin.recepcionistas');
+
+route::get("/admin/recepcionistas/create", [RecepcionistaController::class, 'create'])->name('admin.recepcionistas.create');
+route::post("/admin/recepcionistas", [RecepcionistaController::class, 'store'])->name('admin.recepcionistas.store');
+
+route::get("/admin/recepcionistas/{id}", [RecepcionistaController::class, 'show'])->name('admin.recepcionistas.show');
+
+
+route::get("/admin/recepcionistas/{id}/edit", [RecepcionistaController::class, 'edit'])->name('admin.recepcionistas.edit');
+
+route::put("/admin/recepcionistas/{id}", [RecepcionistaController::class, 'update'])->name('admin.recepcionistas.update');
+
+route::delete("/admin/recepcionistas/{id}", [RecepcionistaController::class, 'destroy'])->name('admin.recepcionistas.destroy');
+
+route::get('/admin/medicos', [MedicoController::class, 'index'])->name('admin.medicos');
+route::get('/admin/medicos/create', [MedicoController::class, 'create'])->name('admin.medicos.create');
+route::post('/admin/medicos', [MedicoController::class, 'store'])->name('admin.medicos.store');
+route::get('/admin/medicos/{id}', [MedicoController::class, 'show'])->name('admin.medicos.show');
+route::get('/admin/medicos/{id}/edit', [MedicoController::class, 'edit'])->name('admin.medicos.edit');
+route::put('/admin/medicos/{id}', [MedicoController::class, 'update'])->name('admin.medicos.update');
+route::delete('/admin/medicos/{id}', [MedicoController::class, 'destroy'])->name('admin.medicos.destroy');
+
+route::get('/admin/criar_clinica', [AdminController::class, 'criar_clinica'])->name('admin.criar_clinica');
+route::post('/admin/store_clinica', [AdminController::class, 'store_clinica'])->name('admin.store_clinica');
+
+
+
+#rotas para recepcionista
+
+route::get('/recepcionista', function () {
+    return view('recepcionista.dashboard');
+})->name('recepcionista.index');
+
+
+
+#grupo de rotas para pacientes
+
+
+Route::get('/pacientes/create', [PacientesController::class, 'create'])->name('pacientes.create');
+
+Route::post('/pacientes', [PacientesController::class, 'store'])->name('pacientes.store');
+
+Route::get('/pacientes/{id}', [PacientesController::class, 'show'])->name('pacientes.show');
+
+Route::get('/pacientes/{id}/edit', [PacientesController::class, 'edit'])->name('pacientes.edit');
+
+Route::put('/pacientes/{id}', [PacientesController::class, 'update'])->name('pacientes.update');
+
+Route::delete('/pacientes/{id}', [PacientesController::class, 'destroy'])->name('pacientes.destroy');
