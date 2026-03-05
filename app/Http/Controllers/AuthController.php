@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Clinica;
+use App\Models\Medico;
+use App\Models\Recepcionista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; // Importante para a senha
@@ -80,5 +83,51 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');
+    }
+
+    public function me()
+    {
+        $user = Auth::user();
+
+        $clinica = null;
+        $medico = null;
+        $recepcionista = null;
+
+        if ($user->role === 'admin') {
+            $clinica = Clinica::where('user_id', $user->id)->first();
+        }
+
+        if ($user->role === 'medico') {
+            $medico = Medico::where('user_id', $user->id)->with('especialidade')->first();
+        }
+
+        if ($user->role === 'recepcionista') {
+            $recepcionista = User::where('user_id', $user->id)->first();
+        }
+
+        return view('auth.me', compact(
+            'user',
+            'clinica',
+            'medico',
+            
+        ));
+    }
+
+    public function split()
+    {
+        if (Auth::check()) {
+            switch (Auth::user()->role) {
+                case 'admin':
+                    return redirect()->route('admin.index');
+                case 'medico':
+                    return redirect()->route('medicos.dashboard');
+                case 'recepcionista':
+                    return redirect()->route('recepcionista.index');
+                default:
+                    Auth::logout();
+                    return redirect()->route('login')->withErrors(['email' => 'Função de usuário desconhecida.']);
+            }
+        }
+        return redirect()->route('login')->withErrors(['email' => 'Você precisa estar logado para acessar esta página.']);
     }
 }

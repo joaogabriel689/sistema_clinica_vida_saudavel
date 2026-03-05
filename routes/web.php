@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\PacientesController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
@@ -12,7 +13,12 @@ Route::get('/', function () {
     return view('welcome');
 })->name('index');
 
+
+Route::get('/me', [AuthController::class, 'me'])->name('me');
 # Rotas de autenticação
+
+Route::get('/dashboard_split', [AuthController::class, 'split'])->name('dashboard_split');
+
 
 Route::get('/register', [AuthController::class, 'register'])->name('register');
 
@@ -57,6 +63,9 @@ route::get('/admin/criar_clinica', [AdminController::class, 'criar_clinica'])->n
 route::post('/admin/store_clinica', [AdminController::class, 'store_clinica'])->name('admin.store_clinica');
 
 
+#rotas para medico
+
+route::get('/medicos/dashboard', [MedicoController::class, 'dashboard'])->name('medicos.dashboard');
 
 #rotas para recepcionista
 
