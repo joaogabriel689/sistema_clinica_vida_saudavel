@@ -2,13 +2,13 @@
 
 ## 📌 Sobre o Projeto
 
-O Sistema Clínica Vida Saudável está sendo desenvolvido a partir de um estudo de caso aplicado em aula de Banco de Dados.
+O **Sistema Clínica Vida Saudável** está sendo desenvolvido a partir de um estudo de caso aplicado em aula de **Banco de Dados**.
 
-No estudo, foi proposto analisar a necessidade de uma clínica chamada **Vida Saudável**, que deseja gerenciar melhor seus processos internos por meio de um sistema de agendamento de consultas.
+No estudo, foi proposta a análise das necessidades de uma clínica fictícia chamada **Vida Saudável**, que deseja melhorar o gerenciamento de seus processos internos por meio de um sistema de **agendamento de consultas**.
 
-O objetivo principal é praticar modelagem de banco de dados de forma simples, considerando que este é o primeiro contato de muitos alunos com SGBDs.
+O objetivo principal do projeto é praticar **modelagem de banco de dados**, desenvolvimento de aplicações web e implementação de regras de negócio de forma simples, considerando que este é o primeiro contato de muitos alunos com **SGBDs**.
 
-Por esse motivo, o projeto não utiliza um banco totalmente idêntico ao proposto no estudo original, pois adaptações foram feitas para permitir evolução futura.
+Por esse motivo, o projeto não utiliza um banco de dados totalmente idêntico ao proposto no estudo original. Algumas adaptações foram realizadas para permitir **evolução futura do sistema**.
 
 ---
 
@@ -23,7 +23,9 @@ Por esse motivo, o projeto não utiliza um banco totalmente idêntico ao propost
 
 ## 🔐 Controle de Acesso (RBAC)
 
-O sistema utiliza controle de permissões baseado em papéis (RBAC), com os seguintes perfis:
+O sistema utiliza controle de permissões baseado em papéis (**RBAC**).
+
+Perfis existentes no sistema:
 
 - **Admin**
 - **Médico**
@@ -34,48 +36,84 @@ O sistema utiliza controle de permissões baseado em papéis (RBAC), com os segu
 ## 👥 Regras de Negócio
 
 ### 👤 Administrador
-- Pode gerenciar sua clínica
-- Pode criar contas para médicos
-- Pode criar contas para recepcionistas
+
+O administrador possui controle completo sobre a clínica.
+
+Funções:
+
+- Gerenciar a clínica
+- Criar contas de médicos
+- Criar contas de recepcionistas
+
+---
 
 ### 🧾 Recepcionista
-- Pode criar pacientes
-- Pode visualizar e gerenciar a agenda da clínica
-- Pode gerenciar consultas
 
-> Observação: Pacientes não possuem conta no sistema e não podem acessá-lo atualmente.
+Responsável pelo atendimento e organização da agenda.
+
+Funções:
+
+- Criar pacientes
+- Visualizar a agenda da clínica
+- Gerenciar consultas
+
+Observação:
+
+Pacientes **não possuem conta no sistema** e não podem acessá-lo atualmente.
+
+---
 
 ### 🩺 Médico
-- Pode visualizar apenas suas próprias consultas agendadas
+
+O médico possui acesso limitado apenas às suas informações.
+
+Funções:
+
+- Visualizar apenas suas próprias consultas agendadas
 
 ---
 
-## ⚙️ Funcionalidades Já Implementadas
+## ⚙️ Funcionalidades Implementadas
 
-- Sistema de autenticação (login)
+- Sistema de autenticação (Login)
 - CRUD de recepcionistas
 - CRUD de pacientes
+- CRUD de médicos
 - Estrutura inicial de agendamento
+- Controle de acesso por papéis (RBAC)
 
 ---
 
-## 🎯 Objetivo Futuro
+## 🎯 Objetivos Futuros
 
-Apesar de ter começado como um projeto acadêmico, o sistema está sendo desenvolvido com foco em melhorias futuras e possível utilização como produto real.
+Apesar de ter iniciado como um projeto acadêmico, o sistema está sendo desenvolvido com foco em **evolução futura e possível uso como produto real**.
 
-A arquitetura foi pensada para permitir expansão, novas funcionalidades e evolução do modelo de dados.
+Possíveis melhorias planejadas:
+
+- Sistema completo de agendamento
+- Controle de horários médicos
+- Validação de conflitos de consulta
+- Dashboard administrativo
+- Melhorias de segurança
+- Expansão do modelo de dados
+
+A arquitetura foi planejada para permitir **expansão e manutenção do sistema ao longo do tempo**.
 
 ---
 
 ## 🖥️ Interface
 
-O front-end do sistema utiliza **Bootstrap 5**, garantindo layout responsivo e organização visual.
+O front-end do sistema utiliza **Bootstrap 5**, proporcionando:
+
+- Layout responsivo
+- Interface organizada
+- Facilidade de manutenção
 
 ---
 
 ## 📚 Contexto Acadêmico
 
-Este projeto faz parte de um estudo prático de modelagem de banco de dados, com foco no aprendizado dos fundamentos de:
+Este projeto faz parte de um estudo prático de **modelagem de banco de dados**, com foco no aprendizado dos seguintes conceitos:
 
 - Modelagem relacional
 - Entidades e relacionamentos
@@ -88,3 +126,92 @@ Este projeto faz parte de um estudo prático de modelagem de banco de dados, com
 ## 📌 Status do Projeto
 
 Em desenvolvimento.
+
+---
+
+## 📂 Rotas do Sistema
+
+### Rotas Gerais
+
+```
+GET     /
+GET     login
+POST    logout
+GET     register
+POST    store_login
+POST    store_register
+```
+
+---
+
+### Rotas do Administrador
+
+```
+GET     admin
+GET     admin/criar_clinica
+POST    admin/store_clinica
+```
+
+---
+
+### Rotas de Médicos
+
+```
+GET     admin/medicos
+POST    admin/medicos
+GET     admin/medicos/create
+GET     admin/medicos/{id}
+PUT     admin/medicos/{id}
+DELETE  admin/medicos/{id}
+GET     admin/medicos/{id}/edit
+```
+
+---
+
+### Rotas de Recepcionistas
+
+```
+GET     admin/recepcionistas
+POST    admin/recepcionistas
+GET     admin/recepcionistas/create
+GET     admin/recepcionistas/{id}
+PUT     admin/recepcionistas/{id}
+DELETE  admin/recepcionistas/{id}
+GET     admin/recepcionistas/{id}/edit
+```
+
+---
+
+### Rotas de Pacientes
+
+```
+POST    pacientes
+GET     pacientes/create
+GET     pacientes/{id}
+PUT     pacientes/{id}
+DELETE  pacientes/{id}
+GET     pacientes/{id}/edit
+```
+
+---
+
+### Rotas da Recepcionista
+
+```
+GET     recepcionista
+```
+
+---
+
+### Rotas de Arquivos
+
+```
+GET     storage/{path}
+PUT     storage/{path}
+```
+
+---
+
+## 📎 Observação
+
+Este projeto está sendo utilizado como **base de aprendizado em desenvolvimento web com Laravel e modelagem de banco de dados**, podendo evoluir futuramente para um sistema mais completo de gestão de clínicas.

@@ -33,8 +33,8 @@
                         <td>{{ $medico->telefone }}</td>
                         <td>{{ $medico->email }}</td>
                         <td>
-                            <a href="{{ route('edit.medico', $medico->id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
-                            <form action="{{ route('destroy.medico', $medico->id) }}" method="POST" class="d-inline">
+                            <a href="{{ route('admin.medicos.edit', $medico->id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <form action="{{ route('admin.medicos.destroy', $medico->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza que deseja excluir este médico?')">Excluir</button>
