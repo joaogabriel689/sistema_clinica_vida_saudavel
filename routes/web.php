@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\RecepcionistaController;
 use App\Http\Controllers\MedicoController;
+use App\Http\Controllers\ConveniosController;
 
 
 Route::get('/', function () {
@@ -62,6 +63,14 @@ route::delete('/admin/medicos/{id}', [MedicoController::class, 'destroy'])->name
 route::get('/admin/criar_clinica', [AdminController::class, 'criar_clinica'])->name('admin.criar_clinica');
 route::post('/admin/store_clinica', [AdminController::class, 'store_clinica'])->name('admin.store_clinica');
 
+#rotas para convenio
+
+Route::get('/admin/convenios', [ConveniosController::class, 'index'])->name('admin.convenios.index');
+Route::get('/admin/convenios/create', [ConveniosController::class, 'create'])->name('admin.convenios.create');
+Route::post('/admin/convenios', [ConveniosController::class, 'store'])->name('admin.convenios.store');
+Route::get('/admin/convenios/{id}/edit', [ConveniosController::class, 'edit'])->name('admin.convenios.edit');
+Route::put('/admin/convenios/{id}', [ConveniosController::class, 'update'])->name('admin.convenios.update');
+Route::delete('/admin/convenios/{id}', [ConveniosController::class, 'destroy'])->name('admin.convenios.destroy');
 
 #rotas para medico
 

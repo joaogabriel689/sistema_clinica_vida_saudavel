@@ -10,17 +10,27 @@
 
     {{-- Cards de resumo --}}
     <div class="row g-4 mb-4">
+        @if($clinica == null)
 
         <div class="col-md-3">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">criar clinica</h6>
-                    <h3>--</h3>
                     <a href="{{ route('admin.criar_clinica') }}" class="small">Gerenciar</a>
                 </div>
             </div>
         </div>
 
+        @endif
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Convenios</h6>
+                    <h3>--</h3>
+                    <a href="{{ route('admin.convenios.index') }}" class="small">Gerenciar</a>
+                </div>
+            </div>
+        </div>
         <div class="col-md-3">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -35,7 +45,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Médicos Ativos</h6>
-                    <h3>--</h3>
+                    <h3>{{ $quantidade_medicos }}</h3>
                     <a href="{{ route('admin.medicos') }}" class="small">Gerenciar médicos</a>
                 </div>
             </div>
@@ -45,7 +55,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Recepcionistas</h6>
-                    <h3>--</h3>
+                    <h3>{{ $quantidade_recepcionistas }}</h3>
                     <a href="{{ route('admin.recepcionistas') }}" class="small">Gerenciar</a>
                 </div>
             </div>

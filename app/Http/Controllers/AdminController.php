@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Paciente;
 use App\Models\Clinica;
+use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class AdminController extends Controller
 {
@@ -15,7 +17,18 @@ class AdminController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
         }
-        return view('admin.index');
+        if (!Auth::user()->role === 'admin') {
+            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
+        }
+        $clinica = null;
+        
+        $clinica = Clinica::where('user_id', Auth::id())->first();
+
+        $quantidade_recepcionistas = User::where('role', 'recepcionista')->count();
+        $quantidade_medicos = User::where('role', 'medico')->count();
+        
+    
+        return view('admin.index', compact(['clinica', 'quantidade_recepcionistas', 'quantidade_medicos']));
     }
 
     public function list_pacientes()
@@ -23,9 +36,7 @@ class AdminController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
         }
-        // Aqui você pode buscar os pacientes do banco de dados e passá-los para a view
-        // $pacientes = Paciente::all();
-        // return view('admin.pacientes', compact('pacientes'));
+
         $pacientes = Paciente::all();
         return view('pacientes.index', compact('pacientes'));
     }
@@ -35,6 +46,12 @@ class AdminController extends Controller
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
+        }
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
+        }
+        if (Clinica::where('user_id', Auth::id())->exists()) {
+            return redirect()->route('me')->with('error', 'Você já possui uma clínica cadastrada.');
         }
         return view('admin.criar_clinica');
     }

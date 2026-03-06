@@ -26,14 +26,14 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             // 'password' => 'required|string|min:8|confirmed',
-            // No registro público, o ideal é definir um role padrão (ex: paciente ou recepcionista)
+
         ]);
-        // No Laravel, precisamos criptografar a senha manualmente ao criar
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Igual ao set_password do Django
-            'role' => $request->role ?? 'admin', // Define um padrão seguro
+            'password' => Hash::make($request->password), 
+            'role' => 'admin',
         ]);
 
         return redirect()->route('login')->with('success', 'Registro realizado com sucesso.');
@@ -60,10 +60,10 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
             switch (Auth::user()->role) {
                 case 'admin':
                     return redirect()->intended('admin')->with('success', 'Bem-vindo de volta, ' . Auth::user()->name . '!');
-                case 'paciente':
-                    return redirect()->intended('pacientes')->with('success', 'Bem-vindo de volta!');
+                case 'medico':
+                    return redirect()->intended('medicos.dashboard')->with('success', 'Bem-vindo de volta!');
                 case 'recepcionista':
-                    return redirect()->intended('recepcionista')->with('success', 'Bem-vindo de volta!');
+                    return redirect()->intended('recepcionista.index')->with('success', 'Bem-vindo de volta!');
                 default:
                     Auth::logout();
                     return redirect()->route('login')->withErrors(['email' => 'Função de usuário desconhecida.']);
@@ -87,6 +87,9 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
     public function me()
     {
+        if (!Auth::check()) {
+            return redirect()->route('login')->withErrors(['email' => 'Você precisa estar logado para acessar esta página.']);
+        }
         $user = Auth::user();
 
         $clinica = null;
