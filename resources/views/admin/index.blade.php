@@ -26,7 +26,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted">Convenios</h6>
-                    <h3>--</h3>
+                    <h3>{{ $quantidade_convenios }}</h3>
                     <a href="{{ route('admin.convenios.index') }}" class="small">Gerenciar</a>
                 </div>
             </div>

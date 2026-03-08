@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\RecepcionistaController;
 use App\Http\Controllers\MedicoController;
 use App\Http\Controllers\ConveniosController;
+use App\Http\Controllers\ConsultaController;
 
 
 Route::get('/', function () {
@@ -76,11 +77,12 @@ Route::delete('/admin/convenios/{id}', [ConveniosController::class, 'destroy'])-
 
 route::get('/medicos/dashboard', [MedicoController::class, 'dashboard'])->name('medicos.dashboard');
 
+Route::get('/api/medicos/{especialidade}', [MedicoController::class, 'porEspecialidade']);
+Route::get('/api/medico/{id}/horarios', [MedicoController::class, 'horarios']);
+
 #rotas para recepcionista
 
-route::get('/recepcionista', function () {
-    return view('recepcionista.dashboard');
-})->name('recepcionista.index');
+route::get('/recepcionista', [RecepcionistaController::class, 'dashboard'])->name('recepcionista.dashboard');
 
 
 
@@ -98,3 +100,20 @@ Route::get('/pacientes/{id}/edit', [PacientesController::class, 'edit'])->name('
 Route::put('/pacientes/{id}', [PacientesController::class, 'update'])->name('pacientes.update');
 
 Route::delete('/pacientes/{id}', [PacientesController::class, 'destroy'])->name('pacientes.destroy');
+
+#rotas para consultas
+
+Route::get('/consultas', [ConsultaController::class, 'list'])->name('consultas.list');
+
+Route::get('/consultas/create', [ConsultaController::class, 'create'])->name('consultas.create');
+
+route::post('/consultas', [ConsultaController::class, 'store'])->name('consultas.store');
+
+route::get('/consultas/{id}', [ConsultaController::class, 'show'])->name('consultas.show');
+
+route::get('/consultas/{id}/edit', [ConsultaController::class, 'edit'])->name('consultas.edit');
+
+route::put('/consultas/{id}', [ConsultaController::class, 'update'])->name('consultas.update');
+
+route::delete('/consultas/{id}', [ConsultaController::class, 'destroy'])->name('consultas.destroy');
+

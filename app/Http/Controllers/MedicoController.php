@@ -224,4 +224,34 @@ class MedicoController extends Controller
         }
         return redirect()->route('admin.medicos')->with('success', 'Médico deletado com sucesso.');
     }
+    public function dashboard()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
+        }
+        if (Auth::user()->role !== 'medico') {
+            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
+        }
+        $medico = Medico::where('user_id', Auth::id())->first();
+        $agenda_medico_hoje = \App\Models\Consulta::where('medico_id', $medico->id)
+            ->whereDate('data_hora_inicio', now()->toDateString())
+            ->with('paciente')
+            ->orderBy('data_hora_inicio')
+            ->get();
+        return view('medicos.dashboard', compact('medico', 'agenda_medico_hoje'));
+    }
+
+    public function porespecialidade($especialidadeId)
+    {
+        $medicos = Medico::where('especialidade_id', $especialidadeId)->get();
+        return response()->json($medicos);
+    }
+    public function horarios($medicoId)
+    {
+        $medico = Medico::findOrFail($medicoId);
+        return response()->json([
+            'horario_inicio' => $medico->horario_inicio,
+            'horario_fim' => $medico->horario_fim
+        ]);
+    }
 }

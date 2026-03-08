@@ -29,7 +29,7 @@
                     <tr>
                         <td>{{ $medico->nome }}</td>
                         <td>{{ $medico->crm }}</td>
-                        <td>{{ $medico->especialidade }}</td>
+                        <td>{{ $medico->especialidade->nome ?? '—' }}</td>
                         <td>{{ $medico->telefone }}</td>
                         <td>{{ $medico->email }}</td>
                         <td>

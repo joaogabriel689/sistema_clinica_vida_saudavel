@@ -13,7 +13,21 @@ class Clinica extends Model
         'endereco',
         'telefone',
         'cnpj',
-        'user_id',
+        'user_id'
     ];
 
+    public function medicos()
+    {
+        return $this->hasMany(Medico::class);
+    }
+
+    public function convenios()
+    {
+        return $this->hasMany(Convenio::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

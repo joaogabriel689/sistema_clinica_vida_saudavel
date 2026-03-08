@@ -57,16 +57,25 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
 
-            switch (Auth::user()->role) {
+            $user = Auth::user();
+
+            switch ($user->role) {
                 case 'admin':
-                    return redirect()->intended('admin')->with('success', 'Bem-vindo de volta, ' . Auth::user()->name . '!');
+                    return redirect()->intended(route('admin.index'))
+                        ->with('success', 'Bem-vindo de volta, ' . $user->name . '!');
+
                 case 'medico':
-                    return redirect()->intended('medicos.dashboard')->with('success', 'Bem-vindo de volta!');
+                    return redirect()->intended(route('medicos.dashboard'))
+                        ->with('success', 'Bem-vindo de volta!');
+
                 case 'recepcionista':
-                    return redirect()->intended('recepcionista.index')->with('success', 'Bem-vindo de volta!');
+                    return redirect()->intended(route('recepcionista.dashboard'))
+                        ->with('success', 'Bem-vindo de volta!');
+
                 default:
                     Auth::logout();
-                    return redirect()->route('login')->withErrors(['email' => 'Função de usuário desconhecida.']);
+                    return redirect()->route('login')
+                        ->withErrors(['email' => 'Função de usuário desconhecida.']);
             }
 
 
@@ -104,9 +113,6 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
             $medico = Medico::where('user_id', $user->id)->with('especialidade')->first();
         }
 
-        if ($user->role === 'recepcionista') {
-            $recepcionista = User::where('user_id', $user->id)->first();
-        }
 
         return view('auth.me', compact(
             'user',
@@ -125,7 +131,7 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
                 case 'medico':
                     return redirect()->route('medicos.dashboard');
                 case 'recepcionista':
-                    return redirect()->route('recepcionista.index');
+                    return redirect()->route('recepcionista.dashboard');
                 default:
                     Auth::logout();
                     return redirect()->route('login')->withErrors(['email' => 'Função de usuário desconhecida.']);

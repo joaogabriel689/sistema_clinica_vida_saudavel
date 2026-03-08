@@ -139,4 +139,49 @@ class RecepcionistaController extends Controller
         $recepcionista->delete();
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista excluído com sucesso.');
     }
+
+    public function dashboard()
+    {
+        // Verifica se o usuário está logado
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        // Verifica se o usuário é recepcionista
+        if (Auth::user()->role != 'recepcionista') {
+            return redirect()->route('index');
+        }
+
+        // Quantidade total de pacientes cadastrados
+        $quantidade_pacientes = \App\Models\Paciente::count();
+
+        // Quantidade de médicos cadastrados
+        $quantidade_medicos = \App\Models\Medico::count();
+
+        // Quantidade de consultas marcadas para hoje
+        $quantidade_consultas_hoje = \App\Models\Consulta::whereDate(
+            'data_hora_inicio',
+            now()->toDateString()
+        )->count();
+
+        // Últimos 5 pacientes cadastrados
+        $pacientes_recentes = \App\Models\Paciente::latest()
+            ->take(5)
+            ->get();
+
+        // Consultas de hoje (com médico e paciente)
+        $agendas_hoje = \App\Models\Consulta::with(['medico', 'paciente'])
+            ->whereDate('data_hora_inicio', now()->toDateString())
+            ->orderBy('data_hora_inicio')
+            ->get();
+
+        // Retorna a view com os dados
+        return view('recepcionista.dashboard', compact(
+            'quantidade_pacientes',
+            'quantidade_consultas_hoje',
+            'quantidade_medicos',
+            'pacientes_recentes',
+            'agendas_hoje'
+        ));
+    }
 }

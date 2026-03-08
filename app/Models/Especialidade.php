@@ -7,5 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Especialidade extends Model
 {
     protected $table = 'especialidades';
-    protected $fillable = ['id', 'nome'];
+
+    protected $fillable = [
+        'nome'
+    ];
+
+    public function medicos()
+    {
+        return $this->hasMany(Medico::class);
+    }
 }
