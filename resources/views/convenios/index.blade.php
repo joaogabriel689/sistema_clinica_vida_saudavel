@@ -1,6 +1,6 @@
 @extends('layouts.base')
 
-@section('title', 'Convenios')
+@section('title', 'Convênios')
 
 @section('content')
 <div class="container py-4">
@@ -13,68 +13,124 @@
         </a>
     </div>
 
+    {{-- Mensagens --}}
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- Barra de busca --}}
+    <div class="card mb-3">
+        <div class="card-body">
+
+            <form method="GET" action="{{ route('admin.convenios.index') }}">
+
+                <div class="row g-2">
+
+                    <div class="col-md-10">
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Buscar convênio..."
+                            value="{{ request('search') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-2 d-flex gap-2">
+
+                        <button class="btn btn-primary w-100">
+                            Buscar
+                        </button>
+
+                        <a href="{{ route('admin.convenios.index') }}"
+                           class="btn btn-secondary">
+                           Limpar
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    {{-- Contador --}}
+    <div class="mb-2 text-muted">
+        Total: {{ $convenios->total() }} convênios
+    </div>
+
     @if($convenios->isEmpty())
 
         <div class="alert alert-info">
-            Nenhum convênio cadastrado.
+            Nenhum convênio encontrado.
         </div>
-
-        <a href="{{ route('admin.convenios.create') }}" class="btn btn-primary">
-            Criar Convênio
-        </a>
 
     @else
 
-        <table class="table table-striped align-middle">
+        <div class="table-responsive">
 
-            <thead>
-                <tr>
-                    <th>Nome do Convênio</th>
-                    <th style="width:150px">Ações</th>
-                </tr>
-            </thead>
+            <table class="table table-striped align-middle">
 
-            <tbody>
+                <thead>
+                    <tr>
+                        <th>Nome do Convênio</th>
+                        <th class="text-end" style="width:180px">Ações</th>
+                    </tr>
+                </thead>
 
-                @foreach ($convenios as $convenio)
+                <tbody>
 
-                <tr>
-                    <td>{{ $convenio->nome }}</td>
+                    @foreach ($convenios as $convenio)
 
-                    <td>
+                    <tr>
 
-                        <a href="{{ route('admin.convenios.edit', $convenio->id) }}"
-                           class="btn btn-sm btn-outline-primary">
-                           Editar
-                        </a>
+                        <td>{{ $convenio->nome }}</td>
 
-                        <form action="{{ route('admin.convenios.destroy', $convenio->id) }}"
-                              method="POST"
-                              class="d-inline">
+                        <td class="text-end">
 
-                            @csrf
-                            @method('DELETE')
+                            <a href="{{ route('admin.convenios.edit', $convenio->id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                               Editar
+                            </a>
 
-                            <button
-                                type="submit"
-                                class="btn btn-sm btn-outline-danger"
-                                onclick="return confirm('Tem certeza que deseja excluir este convênio?')">
+                            <form action="{{ route('admin.convenios.destroy', $convenio->id) }}"
+                                  method="POST"
+                                  class="d-inline">
 
-                                Excluir
+                                @csrf
+                                @method('DELETE')
 
-                            </button>
+                                <button
+                                    type="submit"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Tem certeza que deseja excluir este convênio?')">
 
-                        </form>
+                                    Excluir
 
-                    </td>
+                                </button>
 
-                </tr>
+                            </form>
 
-                @endforeach
+                        </td>
 
-            </tbody>
+                    </tr>
 
-        </table>
+                    @endforeach
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {{-- Paginação --}}
+        <div class="mt-3">
+            {{ $convenios->withQueryString()->links() }}
+        </div>
 
     @endif
 

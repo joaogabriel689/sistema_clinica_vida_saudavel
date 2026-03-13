@@ -12,7 +12,7 @@ class RecepcionistaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
@@ -20,9 +20,21 @@ class RecepcionistaController extends Controller
         if (Auth::user()->role !== 'admin') {
             return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
         }   
-        $recepcionistas = User::where('role', 'recepcionista')->get();
-        return view('recepcionista.index', compact('recepcionistas'));
-    }
+        $query = User::where('role', 'recepcionista');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+
+                $q->where('name', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%");
+
+            });
+        }
+
+    $recepcionistas = $query->paginate(10);
+
+    return view('recepcionista.index', compact('recepcionistas'));
+}
 
     /**
      * Show the form for creating a new resource.

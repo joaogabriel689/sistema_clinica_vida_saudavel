@@ -55,7 +55,11 @@ class PacientesController extends Controller
         if (Auth::user()->role !== 'recepcionista') {
             return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
         }
-        $paciente = Paciente::findOrFail($id);
+        $paciente = Paciente::with([
+            'consultas.medico',
+            'consultas.especialidade'
+        ])->findOrFail($id);
+
         return view('pacientes.show', compact('paciente'));
     }
 

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class ConveniosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
@@ -17,12 +17,13 @@ class ConveniosController extends Controller
             return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
         }
 
-        $convenios = null;
-        $clinica = Clinica::where('user_id', Auth::id())->first();
-        if ($clinica) {
-            $convenios = Convenio::where('clinica_id', $clinica->id)->get();
+        $query = Convenio::query();
+
+        if ($request->search) {
+            $query->where('nome', 'like', '%' . $request->search . '%');
         }
 
+        $convenios = $query->paginate(10);
 
         return view('convenios.index', compact('convenios'));
     }
@@ -80,7 +81,7 @@ class ConveniosController extends Controller
         $convenio = Convenio::findOrFail($id);
         $convenio->delete();
 
-        return redirect()->route('convenios.index')->with('success', 'Convênio excluído com sucesso!');
+        return redirect()->route('admin.convenios.index')->with('success', 'Convênio excluído com sucesso!');
 
 
     }
@@ -124,6 +125,6 @@ class ConveniosController extends Controller
             'percentual_desconto' => $request->percentual_desconto,
         ]);
 
-        return redirect()->route('convenios.index')->with('success', 'Convênio atualizado com sucesso!');
+        return redirect()->route('admin.convenios.index')->with('success', 'Convênio atualizado com sucesso!');
     }
 }

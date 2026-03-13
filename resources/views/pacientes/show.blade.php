@@ -35,5 +35,30 @@
 
     </div>
 </div>
+<h2>{{ $paciente->nome }}</h2>
+
+<h4>Histórico de Consultas</h4>
+
+<table class="table">
+<thead>
+<tr>
+<th>Data</th>
+<th>Médico</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+@foreach($paciente->consultas as $consulta)
+
+<tr>
+<td>{{ $consulta->data_hora_inicio }}</td>
+<td>{{ $consulta->medico->nome }}</td>
+<td>{{ $consulta->status }}</td>
+</tr>
+
+@endforeach
+</tbody>
+</table>
 
 @endsection

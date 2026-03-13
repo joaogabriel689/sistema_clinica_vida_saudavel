@@ -14,15 +14,29 @@ use Illuminate\Support\Facades\Hash;
 class MedicoController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
         }
-        if (Auth::user()->role !== 'admin') {
+        if (Auth::user()->role !== 'admin' and Auth::user()->role !== 'recepcionista') {
             return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
         }
-        $medicos = Medico::all();
+
+        $query = Medico::with('especialidade');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+
+                $q->where('nome', 'like', "%{$request->search}%")
+                ->orWhere('crm', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%");
+
+            });
+        }
+
+        $medicos = $query->paginate(10);
+
         return view('medicos.index', compact('medicos'));
     }
 

@@ -16,7 +16,7 @@ class ConsultaController extends Controller
     /**
      * Dashboard da recepcionista
      */
-    public function index()
+    public function index(Request $request)
     {
         // Verifica se usuário está autenticado
         if (!Auth::check()) {
@@ -28,19 +28,28 @@ class ConsultaController extends Controller
             return redirect()->route('index');
         }
 
-        // Total de consultas do dia
-        $consultas_do_dia = Consulta::whereDate('data_hora_inicio', now()->toDateString())->count();
+        $query = Consulta::with([
+            'paciente',
+            'medico',
+            'especialidade',
+            'convenio'
+        ]);
 
-        // Total de consultas do mês
-        $consultas_do_mes = Consulta::whereMonth('data_hora_inicio', now()->month)->count();
+        if ($request->search) {
 
-        // Consultas pendentes
-        $consultas_pendentes_confirmacao = Consulta::where('status', 'pendente')->count();
+            $query->whereHas('paciente', function ($q) use ($request) {
+                $q->where('nome', 'like', "%{$request->search}%");
+            })
+            ->orWhereHas('medico', function ($q) use ($request) {
+                $q->where('nome', 'like', "%{$request->search}%");
+            });
 
-        // Consultas canceladas
-        $consultas_canceladas = Consulta::where('status', 'cancelada')->count();
+        }
 
-        return view('recepcionista.dashboard', compact(
+        $consultas = $query->paginate(10);
+
+        return view('consultas.index', compact(
+            'consultas',
             'consultas_do_dia',
             'consultas_do_mes',
             'consultas_pendentes_confirmacao',
@@ -52,7 +61,7 @@ class ConsultaController extends Controller
     /**
      * Lista todas as consultas futuras
      */
-    public function list()
+    public function list(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login');
@@ -62,14 +71,65 @@ class ConsultaController extends Controller
             return redirect()->route('index');
         }
 
-        // Busca consultas futuras ordenadas por data
-        $consultas = Consulta::where('data_hora_inicio', '>=', now())
-            ->orderBy('data_hora_inicio')
-            ->get();
+        $query = Consulta::with([
+            'paciente',
+            'medico',
+            'especialidade',
+            'convenio'
+        ]);
 
-        return view('consultas.list_all', compact('consultas'));
+
+        if ($request->search) {
+
+            $query->where(function ($q) use ($request) {
+
+                $q->whereHas('paciente', function ($p) use ($request) {
+                    $p->where('nome','like',"%{$request->search}%");
+                })
+
+                ->orWhereHas('medico', function ($m) use ($request) {
+                    $m->where('nome','like',"%{$request->search}%");
+                });
+
+            });
+
+        }
+
+
+        if ($request->data) {
+            $query->whereDate('data_hora_inicio', $request->data);
+        }
+
+        if ($request->medico) {
+            $query->where('medico_id', $request->medico);
+        }
+
+        if ($request->especialidade) {
+            $query->where('especialidade_id', $request->especialidade);
+        }
+
+        if ($request->convenio) {
+            $query->where('convenio_id', $request->convenio);
+        }
+
+
+        $consultas = $query->orderBy('data_hora_inicio')
+                        ->paginate(10);
+
+
+        $medicos = Medico::orderBy('nome')->get();
+        $especialidades = Especialidade::orderBy('nome')->get();
+        $convenios = Convenio::orderBy('nome')->get();
+
+
+        return view('consultas.list_all', compact(
+            'consultas',
+            'medicos',
+            'especialidades',
+            'convenios'
+        ));
+
     }
-
 
     /**
      * Formulário de criação de consulta
@@ -233,6 +293,7 @@ class ConsultaController extends Controller
     public function update(Request $request, string $id)
     {
 
+        // segurança
         if (!Auth::check()) {
             return redirect()->route('login');
         }
@@ -242,6 +303,38 @@ class ConsultaController extends Controller
         }
 
         $consulta = Consulta::findOrFail($id);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Atualização rápida (status ou pagamento)
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->has('status') || $request->has('pago')) {
+
+            if ($request->status) {
+                $consulta->status = $request->status;
+            }
+
+            if ($request->pago) {
+                $consulta->pago = true;
+            }
+
+            $consulta->save();
+
+            return redirect()
+                ->route('consultas.list')
+                ->with('success', 'Consulta atualizada com sucesso.');
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Atualização completa da consulta
+        |--------------------------------------------------------------------------
+        */
 
         $request->validate([
             'data_hora_inicio' => 'required|date',
@@ -253,42 +346,78 @@ class ConsultaController extends Controller
             'observacoes' => 'nullable|string',
         ]);
 
-        $data_inicio = $request->input('data_hora_inicio');
-        $data_fim = $request->input('data_hora_fim');
 
-        // Verifica conflito de horário (ignora a própria consulta)
-        if (Consulta::where('medico_id', $request->medico_id)
+        $data_inicio = $request->data_hora_inicio;
+        $data_fim = $request->data_hora_fim;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Verifica conflito de horário
+        |--------------------------------------------------------------------------
+        */
+
+        $existeConflito = Consulta::where('medico_id', $request->medico_id)
             ->where('id', '!=', $consulta->id)
             ->where(function ($query) use ($data_inicio, $data_fim) {
 
                 $query->whereBetween('data_hora_inicio', [$data_inicio, $data_fim])
-                    ->orWhereBetween('data_hora_fim', [$data_inicio, $data_fim])
-                    ->orWhere(function ($query) use ($data_inicio, $data_fim) {
 
-                        $query->where('data_hora_inicio', '<=', $data_inicio)
-                            ->where('data_hora_fim', '>=', $data_fim);
+                ->orWhereBetween('data_hora_fim', [$data_inicio, $data_fim])
 
-                    });
+                ->orWhere(function ($query) use ($data_inicio, $data_fim) {
 
-            })->exists()) {
+                    $query->where('data_hora_inicio', '<=', $data_inicio)
+                        ->where('data_hora_fim', '>=', $data_fim);
+
+                });
+
+            })
+            ->exists();
+
+
+        if ($existeConflito) {
 
             return redirect()->back()
-                ->with('error', 'O médico selecionado já possui uma consulta agendada nesse horário.');
+                ->with('error', 'O médico selecionado já possui uma consulta nesse horário.');
 
         }
 
-        // Recalcula desconto do convênio
+
+        /*
+        |--------------------------------------------------------------------------
+        | Recalcula valor com desconto do convênio
+        |--------------------------------------------------------------------------
+        */
+
         $convenio = Convenio::find($request->convenio_id);
+
         $desconto = $convenio ? $convenio->desconto : 0;
 
-        $request->merge([
-            'valor' => $request->valor * (1 - $desconto / 100)
+        $valorFinal = $request->valor * (1 - $desconto / 100);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Atualiza consulta
+        |--------------------------------------------------------------------------
+        */
+
+        $consulta->update([
+
+            'data_hora_inicio' => $request->data_hora_inicio,
+            'data_hora_fim' => $request->data_hora_fim,
+            'valor' => $valorFinal,
+            'medico_id' => $request->medico_id,
+            'paciente_id' => $request->paciente_id,
+            'convenio_id' => $request->convenio_id,
+            'observacoes' => $request->observacoes,
+
         ]);
 
-        // Atualiza consulta
-        $consulta->update($request->all());
 
-        return redirect()->route('consultas.list')
+        return redirect()
+            ->route('consultas.list')
             ->with('success', 'Consulta atualizada com sucesso.');
 
     }
