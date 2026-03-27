@@ -49,12 +49,7 @@ class PacientesController extends Controller
 
     public function show($id)
     {
-        if(!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'recepcionista') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $paciente = Paciente::with([
             'consultas.medico',
             'consultas.especialidade'
@@ -65,23 +60,13 @@ class PacientesController extends Controller
 
     public function edit($id)
     {
-        if(!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'recepcionista') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $paciente = Paciente::findOrFail($id);
         return view('pacientes.edit', compact('paciente'));
     }
     public function update(Request $request, $id)
     {
-        if(!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'recepcionista') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $request->validate([
             'nome' => 'required',
             'cpf' => 'required|unique:pacientes,cpf,',
@@ -96,12 +81,7 @@ class PacientesController extends Controller
     }
     public function destroy($id)
     {
-        if(!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'recepcionista') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $paciente = Paciente::findOrFail($id);
         $paciente->delete();
         return redirect()->route('admin.pacientes')->with('success', 'Paciente deletado com sucesso.');

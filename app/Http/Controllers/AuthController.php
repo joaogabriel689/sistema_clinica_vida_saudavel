@@ -19,9 +19,7 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
     public function store_register(Request $request)
     {
-        if (Auth::check()) {
-            return redirect()->route('admin.index');
-        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -41,9 +39,7 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
     public function login()
     {
-        if (Auth::check()) {
-            return redirect()->route('admin.index');
-        }
+
         return view('auth.login');
     }
 
@@ -96,9 +92,7 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
     public function me()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->withErrors(['email' => 'Você precisa estar logado para acessar esta página.']);
-        }
+
         $user = Auth::user();
 
         $clinica = null;

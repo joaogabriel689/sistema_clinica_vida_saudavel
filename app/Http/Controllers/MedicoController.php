@@ -16,12 +16,7 @@ class MedicoController extends Controller
 
     public function index(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin' and Auth::user()->role !== 'recepcionista') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
 
         $query = Medico::with('especialidade');
 
@@ -45,12 +40,7 @@ class MedicoController extends Controller
      */
     public function create()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $especialidades = Especialidade::all();
         return view('medicos.create', compact('especialidades'));
     }
@@ -60,19 +50,7 @@ class MedicoController extends Controller
      */
     public function store(Request $request)
     {
-        // Verifica se o usuário está logado
-        if (!Auth::check()) {
-            return redirect()
-                ->route('login')
-                ->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
 
-        // Verifica se o usuário é admin
-        if (Auth::user()->role !== 'admin') {
-            return redirect()
-                ->route('index')
-                ->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
 
         // Validação dos dados enviados pelo formulário
         $request->validate([
@@ -134,12 +112,7 @@ class MedicoController extends Controller
 
     public function edit(string $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $medico = Medico::findOrFail($id);
         $especialidades = Especialidade::all();
         return view('medicos.edit', compact('medico', 'especialidades'));
@@ -150,19 +123,7 @@ class MedicoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Verifica se o usuário está logado
-        if (!Auth::check()) {
-            return redirect()
-                ->route('login')
-                ->with('error', 'Você precisa estar logado.');
-        }
 
-        // Verifica se é admin
-        if (Auth::user()->role !== 'admin') {
-            return redirect()
-                ->route('index')
-                ->with('error', 'Acesso negado.');
-        }
 
         // Busca o médico
         $medico = Medico::findOrFail($id);
@@ -224,12 +185,7 @@ class MedicoController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $medico = Medico::findOrFail($id);
         $user = User::find($medico->user_id);
         $medico->delete();
@@ -240,12 +196,7 @@ class MedicoController extends Controller
     }
     public function dashboard()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'medico') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $medico = Medico::where('user_id', Auth::id())->first();
         $agenda_medico_hoje = \App\Models\Consulta::where('medico_id', $medico->id)
             ->whereDate('data_hora_inicio', now()->toDateString())

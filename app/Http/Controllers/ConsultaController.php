@@ -18,15 +18,7 @@ class ConsultaController extends Controller
      */
     public function index(Request $request)
     {
-        // Verifica se usuário está autenticado
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
-        // Apenas recepcionistas podem acessar
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         $query = Consulta::with([
             'paciente',
@@ -63,13 +55,7 @@ class ConsultaController extends Controller
      */
     public function list(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         $query = Consulta::with([
             'paciente',
@@ -136,13 +122,7 @@ class ConsultaController extends Controller
      */
     public function create()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         // Carrega dados necessários para o formulário
         $pacientes = Paciente::all();
@@ -165,13 +145,6 @@ class ConsultaController extends Controller
     public function store(Request $request)
     {
 
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         // Validação dos dados
         $request->validate([
@@ -230,13 +203,6 @@ class ConsultaController extends Controller
     public function show(string $id)
     {
 
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         $consulta = Consulta::findOrFail($id);
 
@@ -261,13 +227,7 @@ class ConsultaController extends Controller
     public function edit(string $id)
     {
 
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         $consulta = Consulta::findOrFail($id);
 
@@ -293,14 +253,7 @@ class ConsultaController extends Controller
     public function update(Request $request, string $id)
     {
 
-        // segurança
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         $consulta = Consulta::findOrFail($id);
 
@@ -428,14 +381,6 @@ class ConsultaController extends Controller
      */
     public function destroy(string $id)
     {
-
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         $consulta = Consulta::findOrFail($id);
 

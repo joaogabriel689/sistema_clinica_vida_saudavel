@@ -14,12 +14,7 @@ class AdminController extends Controller
 
     public function index()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (!Auth::user()->role === 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
+
         $clinica = null;
         
         $clinica = Clinica::where('user_id', Auth::id())->first();
@@ -33,9 +28,6 @@ class AdminController extends Controller
 
     public function list_pacientes()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
 
         $pacientes = Paciente::all();
         return view('pacientes.index', compact('pacientes'));
@@ -44,23 +36,13 @@ class AdminController extends Controller
 
     public function criar_clinica()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
-        if (Clinica::where('user_id', Auth::id())->exists()) {
-            return redirect()->route('me')->with('error', 'Você já possui uma clínica cadastrada.');
-        }
+
         return view('admin.criar_clinica');
     }
 
     public function store_clinica(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
+
 
         $request->validate([
             'nome' => 'required|string|max:255',

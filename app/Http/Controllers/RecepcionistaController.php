@@ -14,12 +14,7 @@ class RecepcionistaController extends Controller
      */
     public function index(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }   
+
         $query = User::where('role', 'recepcionista');
 
         if ($request->search) {
@@ -41,13 +36,7 @@ class RecepcionistaController extends Controller
      */
     public function create()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }   
-        
+
         return view('recepcionista.create');
     }
 
@@ -56,12 +45,7 @@ class RecepcionistaController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }   
+  
         $request->validate([
             'nome' => 'required',
             'email' => 'required|unique:users',
@@ -83,12 +67,7 @@ class RecepcionistaController extends Controller
      */
     public function show(string $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         $recepcionista = User::findOrFail($id);
         return view('recepcionista.show', compact('recepcionista'));  
     }
@@ -98,12 +77,7 @@ class RecepcionistaController extends Controller
      */
     public function edit(string $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }   
+
         $recepcionista = User::findOrFail($id);
         return view('recepcionista.edit', compact('recepcionista'));
     }
@@ -113,12 +87,7 @@ class RecepcionistaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        } 
+
         $request->validate([
             'nome' => 'required',
             'email' => 'required|unique:users,email,' . $id,
@@ -141,12 +110,7 @@ class RecepcionistaController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }   
+
         $recepcionista = User::findOrFail($id);
         $recepcionista->delete();
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista excluído com sucesso.');
@@ -154,15 +118,7 @@ class RecepcionistaController extends Controller
 
     public function dashboard()
     {
-        // Verifica se o usuário está logado
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
-        // Verifica se o usuário é recepcionista
-        if (Auth::user()->role != 'recepcionista') {
-            return redirect()->route('index');
-        }
 
         // Quantidade total de pacientes cadastrados
         $quantidade_pacientes = \App\Models\Paciente::count();

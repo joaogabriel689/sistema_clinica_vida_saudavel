@@ -10,12 +10,7 @@ class ConveniosController extends Controller
 {
     public function index(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
+
 
         $query = Convenio::query();
 
@@ -29,23 +24,12 @@ class ConveniosController extends Controller
     }
     public function create()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
+
 
         return view('convenios.create');
     }
     public function store(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
 
         $clinica = Clinica::where('user_id', Auth::id())->first();
         if (!$clinica) {
@@ -71,12 +55,7 @@ class ConveniosController extends Controller
 
     public function destroy($id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
+
 
         $convenio = Convenio::findOrFail($id);
         $convenio->delete();
@@ -88,12 +67,7 @@ class ConveniosController extends Controller
 
     public function edit($id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
+
 
         $convenio = Convenio::findOrFail($id);
         return view('convenios.edit', compact('convenio'));
@@ -103,12 +77,7 @@ class ConveniosController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar o painel de administração.');
-        }
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Você não tem permissão para acessar esta página.');
-        }
+
 
         $convenio = Convenio::findOrFail($id);
 
