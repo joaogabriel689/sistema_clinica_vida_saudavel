@@ -9,7 +9,7 @@ use App\Models\Medico;
 use App\Models\Convenio;
 use App\Models\Especialidade;
 use Illuminate\Support\Facades\Auth;
-
+use Carbon\Carbon;
 class ConsultaController extends Controller
 {
 
@@ -62,7 +62,7 @@ class ConsultaController extends Controller
             'medico',
             'especialidade',
             'convenio'
-        ])->where('clinica_id', Auth::user()->clinica_id)->where('data_hora_inicio', '>=', now());
+        ])->where('clinica_id', Auth::user()->clinica_id)->where('data_hora_inicio', '>=', now())->orderBy('data_hora_inicio');
 
 
         if ($request->search) {
@@ -103,9 +103,9 @@ class ConsultaController extends Controller
                         ->paginate(10);
 
 
-        $medicos = Medico::orderBy('nome')->get();
-        $especialidades = Especialidade::orderBy('nome')->get();
-        $convenios = Convenio::orderBy('nome')->get();
+        $medicos = Medico::orderBy('nome')->get()->where('clinica_id', Auth::user()->clinica_id);
+        $especialidades = Especialidade::orderBy('nome')->get()->where('clinica_id', Auth::user()->clinica_id);
+        $convenios = Convenio::orderBy('nome')->get()->where('clinica_id', Auth::user()->clinica_id);
 
 
         return view('consultas.list_all', compact(
@@ -125,10 +125,10 @@ class ConsultaController extends Controller
 
 
         // Carrega dados necessários para o formulário
-        $pacientes = Paciente::all();
-        $medicos = Medico::all();
-        $convenios = Convenio::all();
-        $especialidades = Especialidade::all();
+        $pacientes = Paciente::all()->where('clinica_id', Auth::user()->clinica_id);
+        $medicos = Medico::all()->where('clinica_id', Auth::user()->clinica_id);
+        $convenios = Convenio::all()->where('clinica_id', Auth::user()->clinica_id);
+        $especialidades = Especialidade::all()->where('clinica_id', Auth::user()->clinica_id);
 
         return view('consultas.create', compact(
             'pacientes',
@@ -142,60 +142,121 @@ class ConsultaController extends Controller
     /**
      * Salva nova consulta
      */
+
+
     public function store(Request $request)
     {
+        $clinicaId = Auth::user()->clinica_id;
 
+        if (!$clinicaId) {
+            return redirect()->back()->with('error', 'Usuário sem clínica vinculada.');
+        }
 
-        // Validação dos dados
+        // ✅ VALIDAÇÃO
         $request->validate([
             'data_hora_inicio' => 'required|date',
             'data_hora_fim' => 'required|date|after:data_hora_inicio',
-            'valor' => 'required|numeric',
+            'valor' => 'required|numeric|min:0',
             'medico_id' => 'required|exists:medicos,id',
             'paciente_id' => 'required|exists:pacientes,id',
             'convenio_id' => 'nullable|exists:convenios,id',
             'observacoes' => 'nullable|string',
         ]);
 
-        // Aplica desconto do convênio (se existir)
-        $convenio = Convenio::find($request->convenio_id);
-        $desconto = $convenio ? $convenio->desconto : 0;
+        // ✅ CARBON (datas seguras)
+        $dataInicio = Carbon::parse($request->data_hora_inicio);
+        $dataFim = Carbon::parse($request->data_hora_fim);
 
-        $request->merge([
-            'valor' => $request->valor * (1 - $desconto / 100)
-        ]);
-
-        $data_inicio = $request->input('data_hora_inicio');
-        $data_fim = $request->input('data_hora_fim');
-
-        // Verifica conflito de horário do médico
-        if (Consulta::where('medico_id', $request->medico_id)
-            ->where(function ($query) use ($data_inicio, $data_fim) {
-
-                $query->whereBetween('data_hora_inicio', [$data_inicio, $data_fim])
-                    ->orWhereBetween('data_hora_fim', [$data_inicio, $data_fim])
-                    ->orWhere(function ($query) use ($data_inicio, $data_fim) {
-
-                        $query->where('data_hora_inicio', '<=', $data_inicio)
-                            ->where('data_hora_fim', '>=', $data_fim);
-
-                    });
-
-            })->exists()) {
-
-            return redirect()->back()
-                ->with('error', 'O médico selecionado já possui uma consulta agendada nesse horário.');
-
+        if ($dataInicio < now() || $dataFim < now()) {
+            return back()->with('error', 'A consulta deve ser no futuro.');
         }
-        $request->merge([
-            'clinica_id' => Auth::user()->clinica_id
+
+        // ✅ GARANTE QUE TUDO É DA MESMA CLÍNICA
+        $medico = Medico::where('id', $request->medico_id)
+            ->where('clinica_id', $clinicaId)
+            ->first();
+
+        $paciente = Paciente::where('id', $request->paciente_id)
+            ->where('clinica_id', $clinicaId)
+            ->first();
+
+        if (!$medico || !$paciente) {
+            return back()->with('error', 'Dados inválidos para esta clínica.');
+        }
+
+        // ✅ CONVÊNIO
+        $desconto = 0;
+
+        if ($request->convenio_id) {
+            $convenio = Convenio::where('id', $request->convenio_id)
+                ->where('clinica_id', $clinicaId)
+                ->first();
+
+            if (!$convenio) {
+                return back()->with('error', 'Convênio inválido.');
+            }
+
+            $desconto = $convenio->percentual_desconto;
+        }
+
+        $valorFinal = $request->valor * (1 - $desconto / 100);
+
+        // ✅ HORÁRIO DO MÉDICO
+        if (
+            $dataInicio->format('H:i') < $medico->horario_inicio ||
+            $dataFim->format('H:i') > $medico->horario_fim
+        ) {
+            return back()->with('error', 'Fora do horário do médico.');
+        }
+
+        // ✅ CONFLITO PACIENTE
+        $conflitoPaciente = Consulta::where('paciente_id', $paciente->id)
+            ->where('clinica_id', $clinicaId)
+            ->where(function ($q) use ($dataInicio, $dataFim) {
+                $q->whereBetween('data_hora_inicio', [$dataInicio, $dataFim])
+                ->orWhereBetween('data_hora_fim', [$dataInicio, $dataFim])
+                ->orWhere(function ($q) use ($dataInicio, $dataFim) {
+                    $q->where('data_hora_inicio', '<=', $dataInicio)
+                        ->where('data_hora_fim', '>=', $dataFim);
+                });
+            })
+            ->exists();
+
+        if ($conflitoPaciente) {
+            return back()->with('error', 'Paciente já possui consulta nesse horário.');
+        }
+
+        // ✅ CONFLITO MÉDICO
+        $conflitoMedico = Consulta::where('medico_id', $medico->id)
+            ->where('clinica_id', $clinicaId)
+            ->where(function ($q) use ($dataInicio, $dataFim) {
+                $q->whereBetween('data_hora_inicio', [$dataInicio, $dataFim])
+                ->orWhereBetween('data_hora_fim', [$dataInicio, $dataFim])
+                ->orWhere(function ($q) use ($dataInicio, $dataFim) {
+                    $q->where('data_hora_inicio', '<=', $dataInicio)
+                        ->where('data_hora_fim', '>=', $dataFim);
+                });
+            })
+            ->exists();
+
+        if ($conflitoMedico) {
+            return back()->with('error', 'Médico já possui consulta nesse horário.');
+        }
+
+        // ✅ CREATE SEGURO
+        Consulta::create([
+            'data_hora_inicio' => $dataInicio,
+            'data_hora_fim' => $dataFim,
+            'valor' => $valorFinal,
+            'medico_id' => $medico->id,
+            'paciente_id' => $paciente->id,
+            'convenio_id' => $request->convenio_id,
+            'observacoes' => $request->observacoes,
+            'clinica_id' => $clinicaId,
         ]);
-        // Cria consulta
-        Consulta::create($request->all());
 
         return redirect()->route('consultas.list')
             ->with('success', 'Consulta agendada com sucesso.');
-
     }
 
 
@@ -206,7 +267,7 @@ class ConsultaController extends Controller
     {
 
 
-        $consulta = Consulta::findOrFail($id);
+        $consulta = Consulta::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
 
         // Relacionamentos
         $paciente = $consulta->paciente;
@@ -231,11 +292,11 @@ class ConsultaController extends Controller
 
 
 
-        $consulta = Consulta::findOrFail($id);
+        $consulta = Consulta::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
 
-        $pacientes = Paciente::all();
-        $medicos = Medico::all();
-        $convenios = Convenio::all();
+        $pacientes = Paciente::all()->where('clinica_id', Auth::user()->clinica_id);
+        $medicos = Medico::all()->where('clinica_id', Auth::user()->clinica_id);
+        $convenios = Convenio::all()->where('clinica_id', Auth::user()->clinica_id);
         $especialidades = Especialidade::all();
 
         return view('consultas.edit', compact(
@@ -252,129 +313,181 @@ class ConsultaController extends Controller
     /**
      * Atualiza consulta
      */
+
+
     public function update(Request $request, string $id)
     {
+        $clinicaId = Auth::user()->clinica_id;
 
-
-
-        $consulta = Consulta::findOrFail($id);
-
+        // 🔒 garante que a consulta pertence à clínica
+        $consulta = Consulta::where('id', $id)
+            ->where('clinica_id', $clinicaId)
+            ->firstOrFail();
 
         /*
-        |--------------------------------------------------------------------------
-        | Atualização rápida (status ou pagamento)
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | Atualização rápida
+        |----------------------------------------------------------------------
         */
 
         if ($request->has('status') || $request->has('pago')) {
 
-            if ($request->status) {
+            if ($request->has('status')) {
                 $consulta->status = $request->status;
             }
 
-            if ($request->pago) {
-                $consulta->pago = true;
+            if ($request->has('pago')) {
+                $consulta->pago = (bool) $request->pago;
             }
 
             $consulta->save();
 
             return redirect()
                 ->route('consultas.list')
-                ->with('success', 'Consulta atualizada com sucesso.');
-
+                ->with('success', 'Consulta atualizada.');
         }
 
-
         /*
-        |--------------------------------------------------------------------------
-        | Atualização completa da consulta
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | Validação
+        |----------------------------------------------------------------------
         */
 
         $request->validate([
             'data_hora_inicio' => 'required|date',
             'data_hora_fim' => 'required|date|after:data_hora_inicio',
-            'valor' => 'required|numeric',
+            'valor' => 'required|numeric|min:0',
             'medico_id' => 'required|exists:medicos,id',
             'paciente_id' => 'required|exists:pacientes,id',
             'convenio_id' => 'nullable|exists:convenios,id',
             'observacoes' => 'nullable|string',
         ]);
 
+        $dataInicio = Carbon::parse($request->data_hora_inicio);
+        $dataFim = Carbon::parse($request->data_hora_fim);
 
-        $data_inicio = $request->data_hora_inicio;
-        $data_fim = $request->data_hora_fim;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Verifica conflito de horário
-        |--------------------------------------------------------------------------
-        */
-
-        $existeConflito = Consulta::where('medico_id', $request->medico_id)
-            ->where('id', '!=', $consulta->id)
-            ->where(function ($query) use ($data_inicio, $data_fim) {
-
-                $query->whereBetween('data_hora_inicio', [$data_inicio, $data_fim])
-
-                ->orWhereBetween('data_hora_fim', [$data_inicio, $data_fim])
-
-                ->orWhere(function ($query) use ($data_inicio, $data_fim) {
-
-                    $query->where('data_hora_inicio', '<=', $data_inicio)
-                        ->where('data_hora_fim', '>=', $data_fim);
-
-                });
-
-            })
-            ->exists();
-
-
-        if ($existeConflito) {
-
-            return redirect()->back()
-                ->with('error', 'O médico selecionado já possui uma consulta nesse horário.');
-
+        if ($dataInicio < now() || $dataFim < now()) {
+            return back()->with('error', 'A consulta deve ser no futuro.');
         }
 
-
         /*
-        |--------------------------------------------------------------------------
-        | Recalcula valor com desconto do convênio
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | Validação de pertencimento
+        |----------------------------------------------------------------------
         */
 
-        $convenio = Convenio::find($request->convenio_id);
+        $medico = Medico::where('id', $request->medico_id)
+            ->where('clinica_id', $clinicaId)
+            ->first();
 
-        $desconto = $convenio ? $convenio->desconto : 0;
+        $paciente = Paciente::where('id', $request->paciente_id)
+            ->where('clinica_id', $clinicaId)
+            ->first();
+
+        if (!$medico || !$paciente) {
+            return back()->with('error', 'Dados inválidos para esta clínica.');
+        }
+
+        /*
+        |----------------------------------------------------------------------
+        | Convênio
+        |----------------------------------------------------------------------
+        */
+
+        $desconto = 0;
+
+        if ($request->convenio_id) {
+            $convenio = Convenio::where('id', $request->convenio_id)
+                ->where('clinica_id', $clinicaId)
+                ->first();
+
+            if (!$convenio) {
+                return back()->with('error', 'Convênio inválido.');
+            }
+
+            $desconto = $convenio->percentual_desconto;
+        }
 
         $valorFinal = $request->valor * (1 - $desconto / 100);
 
+        /*
+        |----------------------------------------------------------------------
+        | Horário do médico
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            $dataInicio->format('H:i') < $medico->horario_inicio ||
+            $dataFim->format('H:i') > $medico->horario_fim
+        ) {
+            return back()->with('error', 'Fora do horário do médico.');
+        }
 
         /*
-        |--------------------------------------------------------------------------
-        | Atualiza consulta
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | Conflito médico
+        |----------------------------------------------------------------------
+        */
+
+        $conflitoMedico = Consulta::where('medico_id', $medico->id)
+            ->where('clinica_id', $clinicaId)
+            ->where('id', '!=', $consulta->id)
+            ->where(function ($q) use ($dataInicio, $dataFim) {
+                $q->whereBetween('data_hora_inicio', [$dataInicio, $dataFim])
+                ->orWhereBetween('data_hora_fim', [$dataInicio, $dataFim])
+                ->orWhere(function ($q) use ($dataInicio, $dataFim) {
+                    $q->where('data_hora_inicio', '<=', $dataInicio)
+                        ->where('data_hora_fim', '>=', $dataFim);
+                });
+            })
+            ->exists();
+
+        if ($conflitoMedico) {
+            return back()->with('error', 'Médico já possui consulta nesse horário.');
+        }
+
+        /*
+        |----------------------------------------------------------------------
+        | Conflito paciente
+        |----------------------------------------------------------------------
+        */
+
+        $conflitoPaciente = Consulta::where('paciente_id', $paciente->id)
+            ->where('clinica_id', $clinicaId)
+            ->where('id', '!=', $consulta->id)
+            ->where(function ($q) use ($dataInicio, $dataFim) {
+                $q->whereBetween('data_hora_inicio', [$dataInicio, $dataFim])
+                ->orWhereBetween('data_hora_fim', [$dataInicio, $dataFim])
+                ->orWhere(function ($q) use ($dataInicio, $dataFim) {
+                    $q->where('data_hora_inicio', '<=', $dataInicio)
+                        ->where('data_hora_fim', '>=', $dataFim);
+                });
+            })
+            ->exists();
+
+        if ($conflitoPaciente) {
+            return back()->with('error', 'Paciente já possui consulta nesse horário.');
+        }
+
+        /*
+        |----------------------------------------------------------------------
+        | Update seguro
+        |----------------------------------------------------------------------
         */
 
         $consulta->update([
-
-            'data_hora_inicio' => $request->data_hora_inicio,
-            'data_hora_fim' => $request->data_hora_fim,
+            'data_hora_inicio' => $dataInicio,
+            'data_hora_fim' => $dataFim,
             'valor' => $valorFinal,
-            'medico_id' => $request->medico_id,
-            'paciente_id' => $request->paciente_id,
+            'medico_id' => $medico->id,
+            'paciente_id' => $paciente->id,
             'convenio_id' => $request->convenio_id,
             'observacoes' => $request->observacoes,
-
         ]);
-
 
         return redirect()
             ->route('consultas.list')
             ->with('success', 'Consulta atualizada com sucesso.');
-
     }
 
 
@@ -384,7 +497,7 @@ class ConsultaController extends Controller
     public function destroy(string $id)
     {
 
-        $consulta = Consulta::findOrFail($id);
+        $consulta = Consulta::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
 
         $consulta->delete();
 

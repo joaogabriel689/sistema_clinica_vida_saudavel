@@ -19,12 +19,7 @@ class PacientesController extends Controller
 
     public function create()
     {
-        if(!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-        }
-        if (Auth::user()->role !== 'recepcionista') {
-            return redirect()->route('index')->with('error', 'Acesso negado. Você não tem permissão para acessar esta página.');
-        }
+
         return view('pacientes.create');
     }
 
@@ -57,7 +52,7 @@ class PacientesController extends Controller
         $paciente = Paciente::with([
             'consultas.medico',
             'consultas.especialidade'
-        ])->findOrFail($id);
+        ])->findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
 
         return view('pacientes.show', compact('paciente'));
     }
@@ -65,7 +60,7 @@ class PacientesController extends Controller
     public function edit($id)
     {
 
-        $paciente = Paciente::findOrFail($id);
+        $paciente = Paciente::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         return view('pacientes.edit', compact('paciente'));
     }
     public function update(Request $request, $id)
@@ -80,13 +75,19 @@ class PacientesController extends Controller
         ]);
 
         $paciente = Paciente::findOrFail($id);
-        $paciente->update($request->all());
+        $paciente->update([
+            'nome' => $request->nome,
+            'cpf' => $request->cpf,
+            'telefone' => $request->telefone,
+            'endereco' => $request->endereco,
+            'data_nascimento' => $request->data_nascimento,
+        ]);
         return redirect()->route('admin.pacientes')->with('success', 'Paciente atualizado com sucesso.');
     }
     public function destroy($id)
     {
 
-        $paciente = Paciente::findOrFail($id);
+        $paciente = Paciente::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $paciente->delete();
         return redirect()->route('admin.pacientes')->with('success', 'Paciente deletado com sucesso.');
     }

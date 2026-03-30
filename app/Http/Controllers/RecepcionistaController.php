@@ -27,10 +27,10 @@ class RecepcionistaController extends Controller
             });
         }
 
-    $recepcionistas = $query->paginate(10);
+        $recepcionistas = $query->paginate(10);
 
-    return view('recepcionista.index', compact('recepcionistas'));
-}
+        return view('recepcionista.index', compact('recepcionistas'));
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -74,7 +74,7 @@ class RecepcionistaController extends Controller
     public function show(string $id)
     {
 
-        $recepcionista = User::findOrFail($id);
+        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         return view('recepcionista.show', compact('recepcionista'));  
     }
 
@@ -84,7 +84,7 @@ class RecepcionistaController extends Controller
     public function edit(string $id)
     {
 
-        $recepcionista = User::findOrFail($id);
+        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         return view('recepcionista.edit', compact('recepcionista'));
     }
 
@@ -99,7 +99,7 @@ class RecepcionistaController extends Controller
             'email' => 'required|unique:users,email,' . $id,
             'password' => 'nullable|min:8',
         ]);
-        $recepcionista = User::findOrFail($id);
+        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $data = $request->all();
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -117,7 +117,7 @@ class RecepcionistaController extends Controller
     public function destroy(string $id)
     {
 
-        $recepcionista = User::findOrFail($id);
+        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $recepcionista->delete();
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista excluído com sucesso.');
     }
@@ -127,24 +127,25 @@ class RecepcionistaController extends Controller
 
 
         // Quantidade total de pacientes cadastrados
-        $quantidade_pacientes = \App\Models\Paciente::count();
+        $quantidade_pacientes = \App\Models\Paciente::where('clinica_id', Auth::user()->clinica_id)->count();
 
         // Quantidade de médicos cadastrados
-        $quantidade_medicos = \App\Models\Medico::count();
+        $quantidade_medicos = \App\Models\Medico::where('clinica_id', Auth::user()->clinica_id)->count();
 
         // Quantidade de consultas marcadas para hoje
-        $quantidade_consultas_hoje = \App\Models\Consulta::whereDate(
+        $quantidade_consultas_hoje = \App\Models\Consulta::where('clinica_id', Auth::user()->clinica_id)->whereDate(
             'data_hora_inicio',
             now()->toDateString()
         )->count();
 
         // Últimos 5 pacientes cadastrados
-        $pacientes_recentes = \App\Models\Paciente::latest()
+        $pacientes_recentes = \App\Models\Paciente::where('clinica_id', Auth::user()->clinica_id)->latest()
             ->take(5)
             ->get();
 
         // Consultas de hoje (com médico e paciente)
         $agendas_hoje = \App\Models\Consulta::with(['medico', 'paciente'])
+            ->where('clinica_id', Auth::user()->clinica_id)
             ->whereDate('data_hora_inicio', now()->toDateString())
             ->orderBy('data_hora_inicio')
             ->get();

@@ -56,7 +56,7 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::findOrFail($id);
+        $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $convenio->delete();
 
         return redirect()->route('admin.convenios.index')->with('success', 'Convênio excluído com sucesso!');
@@ -68,7 +68,7 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::findOrFail($id);
+        $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         return view('convenios.edit', compact('convenio'));
 
 
@@ -78,7 +78,7 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::findOrFail($id);
+        $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
 
         $request->validate([
             'nome' => 'required|string|max:255',

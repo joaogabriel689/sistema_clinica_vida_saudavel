@@ -115,8 +115,8 @@ class MedicoController extends Controller
     public function edit(string $id)
     {
 
-        $medico = Medico::findOrFail($id);
-        $especialidades = Especialidade::all();
+        $medico = Medico::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $especialidades = Especialidade::all()->where('clinica_id', Auth::user()->clinica_id);
         return view('medicos.edit', compact('medico', 'especialidades'));
     }
 
@@ -188,7 +188,7 @@ class MedicoController extends Controller
     public function destroy(string $id)
     {
 
-        $medico = Medico::findOrFail($id);
+        $medico = Medico::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $user = User::find($medico->user_id);
         $medico->delete();
         if ($user) {
@@ -199,23 +199,23 @@ class MedicoController extends Controller
     public function dashboard()
     {
 
-        $medico = Medico::where('user_id', Auth::id())->first();
+        $medico = Medico::where('user_id', Auth::id())->first()->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $agenda_medico_hoje = \App\Models\Consulta::where('medico_id', $medico->id)
             ->whereDate('data_hora_inicio', now()->toDateString())
             ->with('paciente')
             ->orderBy('data_hora_inicio')
-            ->get();
+            ->get()->where('clinica_id', Auth::user()->clinica_id);
         return view('medicos.dashboard', compact('medico', 'agenda_medico_hoje'));
     }
 
     public function porespecialidade($especialidadeId)
     {
-        $medicos = Medico::where('especialidade_id', $especialidadeId)->get();
+        $medicos = Medico::where('especialidade_id', $especialidadeId)->get()->where('clinica_id', Auth::user()->clinica_id);
         return response()->json($medicos);
     }
     public function horarios($medicoId)
     {
-        $medico = Medico::findOrFail($medicoId);
+        $medico = Medico::findOrFail($medicoId)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         return response()->json([
             'horario_inicio' => $medico->horario_inicio,
             'horario_fim' => $medico->horario_fim
