@@ -130,11 +130,6 @@
 
 </div>
 
-<form action="{{ route('logout') }}" method="post">
-    @csrf
-    <button type="submit" class="btn btn-danger position-fixed bottom-0 end-0 m-4">
-        Sair
-    </button>
-</form>
+
 
 @endsection

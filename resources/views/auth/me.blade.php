@@ -75,11 +75,7 @@
     {{-- =========================
         DASHBOARD
     ========================== --}}
-    <div class="mt-3">
-        <a href="{{ route('dashboard_split') }}" class="btn btn-primary">
-            Ir para o Dashboard
-        </a>
-    </div>
+
 
 </div>
 

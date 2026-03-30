@@ -42,7 +42,6 @@ Route::middleware(['auth'])->group(function () {
     | Auth interno
     |--------------------------------------------------------------------------
     */
-
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/me', [AuthController::class, 'me'])->name('me');
     Route::get('/dashboard_split', [AuthController::class, 'split'])->name('dashboard_split');
