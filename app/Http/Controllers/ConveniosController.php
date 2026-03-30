@@ -5,6 +5,7 @@ use App\Models\Convenio;
 use App\Models\Clinica;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreConvenioRequest;
 
 class ConveniosController extends Controller
 {
@@ -28,17 +29,12 @@ class ConveniosController extends Controller
 
         return view('convenios.create');
     }
-    public function store(Request $request)
+    public function store(StoreConvenioRequest $request)
     {
 
 
 
-        $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'codigo' => 'required|string|max:255|unique:convenios,codigo',
-            'percentual_desconto' => 'required|numeric|min:0|max:100',
-        ]);
+
         $id_clinica = Clinica::where('user_id', Auth::id())->first()->id;
 
         Convenio::create([
@@ -74,18 +70,13 @@ class ConveniosController extends Controller
 
     }
 
-    public function update(Request $request, $id)
+    public function update(StoreConvenioRequest $request, $id)
     {
 
 
         $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
 
-        $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'codigo' => 'required|string|max:255|unique:convenios,codigo,',
-            'percentual_desconto' => 'required|numeric|min:0|max:100',
-        ]);
+
 
         $convenio->update([
             'nome' => $request->nome,

@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use App\Models\Clinica;
 use App\Models\User;
 use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Http\Requests\StoreClinicaRequest;
 
 class AdminController extends Controller
 {
@@ -40,17 +41,11 @@ class AdminController extends Controller
         return view('admin.criar_clinica');
     }
 
-    public function store_clinica(Request $request)
+    public function store_clinica(StoreClinicaRequest $request)
     {
 
 
-        $request->validate([
-            'nome' => 'required|string|max:255',
-            'endereco' => 'required|string|max:255',
-            'telefone' => 'required|string|max:20',
-            'cnpj' => 'required|string|max:20|unique:clinicas',
 
-        ]);
         Clinica::create([
             'nome' => $request->nome,
             'endereco' => $request->endereco,

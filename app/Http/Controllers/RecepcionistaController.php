@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Clinica;
+use App\Http\Requests\StoreRecepcionistaRequest;
+use App\Http\Requests\UpdateRecepcionistaRequest;
 
 class RecepcionistaController extends Controller
 {
@@ -44,14 +46,10 @@ class RecepcionistaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRecepcionistaRequest $request)
     {
   
-        $request->validate([
-            'nome' => 'required',
-            'email' => 'required|unique:users',
-            'password' => 'required|min:8',
-        ]);
+
         try {
             $id_clinica = Auth::user()->clinica_id;
         } catch (\Exception $e) {
@@ -91,14 +89,10 @@ class RecepcionistaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateRecepcionistaRequest $request, string $id)
     {
 
-        $request->validate([
-            'nome' => 'required',
-            'email' => 'required|unique:users,email,' . $id,
-            'password' => 'nullable|min:8',
-        ]);
+
         $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $data = $request->all();
         if (isset($data['password']) && !empty($data['password'])) {

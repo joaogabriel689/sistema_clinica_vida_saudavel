@@ -6,53 +6,28 @@ use App\Models\User;
 use App\Models\Clinica;
 use App\Models\Medico;
 use App\Models\Recepcionista;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash; // Importante para a senha
+use App\Http\Requests\RegisteUserRequest;
+use App\Http\Requests\LoginUserRequest;
 
 class AuthController extends Controller // Corrigi o nome da classe para AuthController
 {
+    protected UserService $userService;
     public function register()
     {
         return view('auth.register');
     }
 
-    public function store_register(Request $request)
+    public function store_register(RegisteUserRequest $request)
     {
-        // 🔹 Validação única (mais limpo)
-        $request->validate([
-            // usuário
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            // 'password' => 'required|string|min:6',
-
-            // clínica
-            'nome' => 'required|string|max:255',
-            'endereco' => 'required|string|max:255',
-            'telefone' => 'required|string|max:20',
-            'cnpj' => 'required|string|max:20|unique:clinicas',
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'admin',
-        ]);
-
-        $clinica = Clinica::create([
-            'nome' => $request->nome,
-            'endereco' => $request->endereco,
-            'telefone' => $request->telefone,
-            'cnpj' => $request->cnpj,
-            'user_id' => $user->id,
-        ]);
 
 
-        $user->update([
-            'clinica_id' => $clinica->id
-        ]);
 
+        $user = $this->userService->criarUsuario($request->only([
+            'name', 'email', 'password', 'nome', 'endereco', 'telefone', 'cnpj'
+        ]));
 
         Auth::login($user);
 
@@ -67,12 +42,9 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
         return view('auth.login');
     }
 
-    public function store_login(Request $request)
+    public function store_login(LoginUserRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();

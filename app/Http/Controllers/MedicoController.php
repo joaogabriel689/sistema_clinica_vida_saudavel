@@ -10,9 +10,13 @@ use App\Models\Clinica;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\StoreMedicoRequest;
+use App\Http\Requests\UpdateMedicoRequest;
+use App\Services\MedicoService;
 
 class MedicoController extends Controller
 {
+    protected MedicoService $medicoService;
 
     public function index(Request $request)
     {
@@ -41,6 +45,8 @@ class MedicoController extends Controller
     public function create()
     {
 
+;
+
         $especialidades = Especialidade::all();
         return view('medicos.create', compact('especialidades'));
     }
@@ -48,63 +54,12 @@ class MedicoController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMedicoRequest $request)
     {
 
-
-        // Validação dos dados enviados pelo formulário
-        $request->validate([
-            'nome' => 'required|string|max:255',
-            'crm' => 'required|string|max:255|unique:medicos,crm',
-            'telefone' => 'required|string|max:20',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string',
-            'especialidade' => 'required',
-            'hora_inicio' => 'required',
-            'hora_fim' => 'required',
-        ]);
-        $id_clinica = Clinica::where('user_id', Auth::id())->first()->id ?? null;
-
-        // Transação para garantir que tudo seja salvo ou nada seja salvo
-        DB::transaction(function () use ($id_clinica, $request) {
-
-            // Cria o usuário do médico
-            $user = User::create([
-                'name' => $request->nome,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'medico',
-                'clinica_id' => $id_clinica,
-            ]);
-
-            // Verifica se o usuário selecionou "Outra especialidade"
-            if ($request->especialidade === 'outra') {
-
-                // Cria ou encontra a especialidade
-                $especialidade = Especialidade::firstOrCreate([
-                    'nome' => $request->nova_especialidade
-                ]);
-
-                $especialidadeId = $especialidade->id;
-
-            } else {
-
-                // Usa a especialidade selecionada
-                $especialidadeId = $request->especialidade;
-            }
-
-            // Cria o médico
-            Medico::create([
-                'nome' => $request->nome,
-                'crm' => $request->crm,
-                'especialidade_id' => $especialidadeId,
-                'telefone' => $request->telefone,
-                'user_id' => $user->id,
-                'clinica_id' => $id_clinica,
-                'horario_inicio' => $request->hora_inicio,
-                'horario_fim' => $request->hora_fim,
-            ]);
-        });
+        $this->medicoService->criarMedico($dados = $request->only([
+            'nome', 'crm', 'especialidade', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
+        ]));
 
         return redirect()
             ->route('admin.medicos')
@@ -123,59 +78,17 @@ class MedicoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateMedicoRequest $request, $id)
     {
 
 
         // Busca o médico
         $medico = Medico::findOrFail($id);
 
-        // Validação
-        $request->validate([
-            'nome' => 'required|string|max:255',
-            'crm' => 'required|string|max:255|unique:medicos,crm,' . $medico->id,
-            'email' => 'required|email|max:255|unique:users,email,' . $medico->user_id,
-            'especialidade' => 'required',
-            'hora_inicio' => 'required',
-            'hora_fim' => 'required',
-        ]);
 
-        // Transaction para garantir integridade
-        DB::transaction(function () use ($request, $medico) {
-
-            // Atualiza o email do usuário relacionado ao médico
-            $user = User::find($medico->user_id);
-
-            $user->update([
-                'name' => $request->nome,
-                'email' => $request->email
-            ]);
-
-            // Verifica se selecionou "outra especialidade"
-            if ($request->especialidade === 'outra') {
-
-                $especialidade = Especialidade::firstOrCreate([
-                    'nome' => $request->nova_especialidade
-                ]);
-
-                $especialidadeId = $especialidade->id;
-
-            } else {
-
-                $especialidadeId = $request->especialidade;
-
-            }
-
-            // Atualiza os dados do médico
-            $medico->update([
-                'nome' => $request->nome,
-                'crm' => $request->crm,
-                'especialidade_id' => $especialidadeId,
-                'horario_inicio' => $request->hora_inicio,
-                'horario_fim' => $request->hora_fim,
-            ]);
-
-        });
+        $this->medicoService->atualizarMedico($medico, $dados = $request->only([
+            'nome', 'crm', 'especialidade', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
+        ]));
 
         return redirect()
             ->route('admin.medicos')

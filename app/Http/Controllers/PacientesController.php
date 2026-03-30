@@ -6,16 +6,11 @@ use Illuminate\Http\Request;
 use \App\Models\Paciente;
 use \App\Models\Clinica;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StorePacienteRequest;
+use App\Http\Requests\UpdatePacienteRequest;
 class PacientesController extends Controller
 {
-    // publicadmin. function()
-    // {
-    //     if(!Auth::check()) {
-    //         return redirect()->route('login')->with('error', 'Você precisa estar logado para acessar esta página.');
-    //     }
-    //     $pacientes = Paciente::all();
-    //     return view('admin.pacientes', compact('pacientes'));
-    // }
+
 
     public function create()
     {
@@ -23,16 +18,9 @@ class PacientesController extends Controller
         return view('pacientes.create');
     }
 
-    public function store(Request $request)
+    public function store(StorePacienteRequest $request)
     {
 
-        $request->validate([
-            'nome' => 'required',
-            'cpf' => 'required|unique:pacientes',
-            'telefone' => 'required',
-            'endereco' => 'required',
-            'data_nascimento' => 'required|date',
-        ]);
 
         $id_clinica = Auth::user()->clinica_id;
         Paciente::create([
@@ -63,16 +51,8 @@ class PacientesController extends Controller
         $paciente = Paciente::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         return view('pacientes.edit', compact('paciente'));
     }
-    public function update(Request $request, $id)
+    public function update(UpdatePacienteRequest $request, $id)
     {
-
-        $request->validate([
-            'nome' => 'required',
-            'cpf' => 'required|unique:pacientes,cpf,',
-            'telefone' => 'required',
-            'endereco' => 'required',
-            'data_nascimento' => 'required|date',
-        ]);
 
         $paciente = Paciente::findOrFail($id);
         $paciente->update([
