@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Clinica;
 
 class RecepcionistaController extends Controller
 {
@@ -15,7 +16,7 @@ class RecepcionistaController extends Controller
     public function index(Request $request)
     {
 
-        $query = User::where('role', 'recepcionista');
+        $query = User::where('role', 'recepcionista')->where('clinica_id', Clinica::where('user_id', Auth::id())->first()->id);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -51,12 +52,17 @@ class RecepcionistaController extends Controller
             'email' => 'required|unique:users',
             'password' => 'required|min:8',
         ]);
-        
+        try {
+            $id_clinica = Auth::user()->clinica_id;
+        } catch (\Exception $e) {
+            return redirect()->route('admin.recepcionistas')->with('error', 'Erro ao criar recepcionista: ' . $e->getMessage());
+        }
         User::create([
             'name' => $request->nome,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'recepcionista',
+            'clinica_id' => $id_clinica,
         ]);
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista criado com sucesso.');
         

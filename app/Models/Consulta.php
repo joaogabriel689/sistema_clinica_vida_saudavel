@@ -9,6 +9,7 @@ class Consulta extends Model
 
     protected $fillable = [
         'paciente_id',
+        'clinica_id',
         'medico_id',
         'especialidade_id',
         'convenio_id',

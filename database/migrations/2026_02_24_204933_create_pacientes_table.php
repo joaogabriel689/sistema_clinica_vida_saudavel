@@ -8,93 +8,169 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. PACIENTES (Independente)
-        Schema::create('pacientes', function (Blueprint $table) {
-            $table->id(); // Simplificado: id padrão Laravel
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLINICAS
+        |--------------------------------------------------------------------------
+        */
+
+        Schema::create('clinicas', function (Blueprint $table) {
+            $table->id();
             $table->string('nome');
-            $table->string('cpf')->unique();
-            $table->string('telefone');
             $table->string('endereco');
-            $table->date('data_nascimento');
+            $table->string('telefone');
+            $table->string('cnpj')->unique();
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
             $table->timestamps();
         });
 
-        // 2. ESPECIALIDADES (Precisa vir antes de Medicos)
+        /*
+        |--------------------------------------------------------------------------
+        | VINCULO USER -> CLINICA
+        |--------------------------------------------------------------------------
+        */
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreignId('clinica_id')->nullable()->constrained()->cascadeOnDelete();
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | ESPECIALIDADES
+        |--------------------------------------------------------------------------
+        */
+
         Schema::create('especialidades', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->unique();
             $table->timestamps();
         });
 
-        // 3. CLINICAS (Precisa vir antes de Medicos e Convenios)
-        Schema::create('clinicas', function (Blueprint $table) {
+        /*
+        |--------------------------------------------------------------------------
+        | PACIENTES
+        |--------------------------------------------------------------------------
+        */
+
+        Schema::create('pacientes', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->string('endereco');
+            $table->string('cpf');
             $table->string('telefone');
-            $table->string("cnpj")->unique();
-            // Referência ao dono da clínica (User)
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('endereco');
+            $table->date('data_nascimento');
+
+            $table->foreignId('clinica_id')->constrained()->cascadeOnDelete();
+
+            $table->unique(['cpf', 'clinica_id']);
+
             $table->timestamps();
         });
 
-        // 4. MEDICOS (Agora pode referenciar Especialidade e Clinica)
+        /*
+        |--------------------------------------------------------------------------
+        | MEDICOS
+        |--------------------------------------------------------------------------
+        */
+
         Schema::create('medicos', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->string('crm')->unique();
+            $table->string('crm');
             $table->string('telefone');
-            $table->foreignId('clinica_id')->constrained('clinicas')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('especialidade_id')->constrained('especialidades')->onDelete('cascade');
-            $table->time("horario_inicio"); // Alterado para 'time' para representar hora
-            $table->time("horario_fim");    // Alterado para 'time'
+
+            $table->foreignId('clinica_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('especialidade_id')->constrained()->cascadeOnDelete();
+
+            $table->time('horario_inicio');
+            $table->time('horario_fim');
+
+            $table->unique(['crm', 'clinica_id']);
+
             $table->timestamps();
         });
 
-        // 5. CONVENIOS
+        /*
+        |--------------------------------------------------------------------------
+        | CONVENIOS
+        |--------------------------------------------------------------------------
+        */
+
         Schema::create('convenios', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
             $table->decimal('percentual_desconto', 5, 2);
-            $table->string('codigo')->unique();
-            $table->foreignId('clinica_id')->constrained('clinicas')->onDelete('cascade');
+            $table->string('codigo');
+
+            $table->foreignId('clinica_id')->constrained()->cascadeOnDelete();
+
+            $table->unique(['codigo', 'clinica_id']);
+
             $table->timestamps();
         });
 
-        // 6. CONSULTAS (A "entidade" que une tudo)
+        /*
+        |--------------------------------------------------------------------------
+        | CONSULTAS
+        |--------------------------------------------------------------------------
+        */
+
         Schema::create('consultas', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('data_hora_inicio'); 
+
+            $table->dateTime('data_hora_inicio');
             $table->dateTime('data_hora_fim')->nullable();
             $table->decimal('valor', 8, 2);
-            $table->foreignId('medico_id')->constrained('medicos')->onDelete('cascade');
-            $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
-            $table->foreignId('convenio_id')->nullable()->constrained('convenios')->onDelete('set null');
+
+            $table->foreignId('clinica_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('medico_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('paciente_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('convenio_id')->nullable()->constrained()->nullOnDelete();
+
             $table->string('status')->default('agendada');
             $table->text('observacoes')->nullable();
             $table->boolean('pago')->default(false);
+
             $table->timestamps();
         });
 
-        // 7. TABELA PIVÔ: PACIENTE_CONVENIO (Conforme Estudo de Caso Parte 2)
-        // Um paciente pode ter vários convênios 
+        /*
+        |--------------------------------------------------------------------------
+        | PIVOT: PACIENTE_CONVENIO
+        |--------------------------------------------------------------------------
+        */
+
         Schema::create('convenio_paciente', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('paciente_id')->constrained()->onDelete('cascade');
-            $table->foreignId('convenio_id')->constrained()->onDelete('cascade');
+
+            $table->foreignId('clinica_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('paciente_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('convenio_id')->constrained()->cascadeOnDelete();
+
+            $table->unique(['paciente_id', 'convenio_id', 'clinica_id']);
         });
     }
 
     public function down(): void
     {
-        // Ordem inversa para o drop (Evita erro de constraint)
         Schema::dropIfExists('convenio_paciente');
         Schema::dropIfExists('consultas');
         Schema::dropIfExists('convenios');
         Schema::dropIfExists('medicos');
-        Schema::dropIfExists('clinicas');
-        Schema::dropIfExists('especialidades');
         Schema::dropIfExists('pacientes');
+        Schema::dropIfExists('especialidades');
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['clinica_id']);
+            $table->dropColumn('clinica_id');
+        });
+
+        Schema::dropIfExists('clinicas');
+        Schema::dropIfExists('users');
     }
 };

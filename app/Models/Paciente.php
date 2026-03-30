@@ -13,7 +13,8 @@ class Paciente extends Model
         'cpf',
         'telefone',
         'endereco',
-        'data_nascimento'
+        'data_nascimento',
+        'clinica_id',
     ];
 
     public function consultas()

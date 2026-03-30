@@ -64,6 +64,77 @@
                     </div>
                 @enderror
             </div>
+            {{-- Nome --}}
+            <div class="mb-3">
+                <label class="form-label">Nome da Clínica</label>
+                <input 
+                    type="text" 
+                    name="nome" 
+                    class="form-control @error('nome') is-invalid @enderror"
+                    value="{{ old('nome') }}"
+                    required
+                >
+
+                @error('nome')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
+            </div>
+
+            {{-- Endereço --}}
+            <div class="mb-3">
+                <label class="form-label">Endereço</label>
+                <input 
+                    type="text" 
+                    name="endereco" 
+                    class="form-control @error('endereco') is-invalid @enderror"
+                    value="{{ old('endereco') }}"
+                    required
+                >
+
+                @error('endereco')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
+            </div>
+
+            {{-- Telefone --}}
+            <div class="mb-3">
+                <label class="form-label">Telefone</label>
+                <input 
+                    type="text" 
+                    name="telefone" 
+                    class="form-control @error('telefone') is-invalid @enderror"
+                    value="{{ old('telefone') }}"
+                    required
+                >
+
+                @error('telefone')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
+            </div>
+
+            {{-- CNPJ --}}
+            <div class="mb-3">
+                <label class="form-label">CNPJ</label>
+                <input 
+                    type="text" 
+                    name="cnpj" 
+                    class="form-control @error('cnpj') is-invalid @enderror"
+                    value="{{ old('cnpj') }}"
+                    required
+                >
+
+                @error('cnpj')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
+            </div>
 
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary">

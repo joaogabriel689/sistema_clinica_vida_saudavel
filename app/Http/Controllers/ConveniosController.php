@@ -12,7 +12,7 @@ class ConveniosController extends Controller
     {
 
 
-        $query = Convenio::query();
+        $query = Convenio::query()->where('clinica_id', Auth::user()->clinica_id);
 
         if ($request->search) {
             $query->where('nome', 'like', '%' . $request->search . '%');
@@ -31,10 +31,7 @@ class ConveniosController extends Controller
     public function store(Request $request)
     {
 
-        $clinica = Clinica::where('user_id', Auth::id())->first();
-        if (!$clinica) {
-            return redirect()->route('admin.index')->with('error', 'Você precisa criar uma clínica antes de adicionar convênios.');
-        }
+
 
         $request->validate([
             'nome' => 'required|string|max:255',
@@ -42,12 +39,14 @@ class ConveniosController extends Controller
             'codigo' => 'required|string|max:255|unique:convenios,codigo',
             'percentual_desconto' => 'required|numeric|min:0|max:100',
         ]);
+        $id_clinica = Clinica::where('user_id', Auth::id())->first()->id;
 
         Convenio::create([
             'nome' => $request->nome,
-            'clinica_id' => $clinica->id,
+            'clinica_id' => $id_clinica,
             'codigo' => $request->codigo,
             'percentual_desconto' => $request->percentual_desconto,
+            'descricao' => $request->descricao,
         ]);
 
         return redirect()->route('admin.convenios.index')->with('success', 'Convênio criado com sucesso!');

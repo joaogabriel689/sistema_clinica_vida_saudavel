@@ -34,8 +34,9 @@ Route::controller(AuthController::class)->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
+    Route::get('/medicos', [MedicoController::class, 'index'])->name('admin.medicos');
     /*
     |--------------------------------------------------------------------------
     | Auth interno
@@ -58,7 +59,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             Route::get('/', [AdminController::class, 'index'])->name('admin.index');
 
-            Route::get('/pacientes', [AdminController::class, 'list_pacientes'])->name('admin.pacientes');
 
             Route::get('/criar_clinica', [AdminController::class, 'criar_clinica'])->name('admin.criar_clinica');
             Route::post('/store_clinica', [AdminController::class, 'store_clinica'])->name('admin.store_clinica');
@@ -86,7 +86,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             Route::prefix('medicos')->group(function () {
 
-                Route::get('/', [MedicoController::class, 'index'])->name('admin.medicos');
+
                 Route::get('/create', [MedicoController::class, 'create'])->name('admin.medicos.create');
                 Route::post('/', [MedicoController::class, 'store'])->name('admin.medicos.store');
 
@@ -132,8 +132,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     */
 
     Route::middleware('role:recepcionista')->group(function () {
+
         Route::get('/recepcionista', [RecepcionistaController::class, 'dashboard'])->name('recepcionista.dashboard');
+
+        /*
+        |---------------- PACIENTES ----------------|
+        */
+
         Route::prefix('pacientes')->group(function () {
+            Route::get('/pacientes', [AdminController::class, 'list_pacientes'])->name('admin.pacientes');
 
             Route::get('/create', [PacientesController::class, 'create'])->name('pacientes.create');
             Route::post('/', [PacientesController::class, 'store'])->name('pacientes.store');
@@ -146,9 +153,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | CONSULTAS
-        |--------------------------------------------------------------------------
+        |---------------- CONSULTAS ----------------|
         */
 
         Route::prefix('consultas')->group(function () {
@@ -165,14 +170,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('/{id}', [ConsultaController::class, 'destroy'])->name('consultas.destroy');
         });
     });
-
-    /*
-    |--------------------------------------------------------------------------
-    | PACIENTES
-    |--------------------------------------------------------------------------
-    */
-
-
 
 });
 

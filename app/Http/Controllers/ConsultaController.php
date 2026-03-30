@@ -25,7 +25,7 @@ class ConsultaController extends Controller
             'medico',
             'especialidade',
             'convenio'
-        ]);
+        ])->where('clinica_id', Auth::user()->clinica_id);
 
         if ($request->search) {
 
@@ -62,7 +62,7 @@ class ConsultaController extends Controller
             'medico',
             'especialidade',
             'convenio'
-        ]);
+        ])->where('clinica_id', Auth::user()->clinica_id)->where('data_hora_inicio', '>=', now());
 
 
         if ($request->search) {
@@ -187,7 +187,9 @@ class ConsultaController extends Controller
                 ->with('error', 'O médico selecionado já possui uma consulta agendada nesse horário.');
 
         }
-
+        $request->merge([
+            'clinica_id' => Auth::user()->clinica_id
+        ]);
         // Cria consulta
         Consulta::create($request->all());
 

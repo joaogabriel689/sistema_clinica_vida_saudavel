@@ -85,7 +85,7 @@
                         Cadastrar Convênio
                     </button>
 
-                    <a href="{{ route('admin.convenios') }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.convenios.index') }}" class="btn btn-secondary">
                         Cancelar
                     </a>
 

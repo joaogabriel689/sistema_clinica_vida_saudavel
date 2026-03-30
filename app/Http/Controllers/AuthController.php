@@ -19,22 +19,46 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
     public function store_register(Request $request)
     {
-
+        // 🔹 Validação única (mais limpo)
         $request->validate([
+            // usuário
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            // 'password' => 'required|string|min:8|confirmed',
+            // 'password' => 'required|string|min:6',
 
+            // clínica
+            'nome' => 'required|string|max:255',
+            'endereco' => 'required|string|max:255',
+            'telefone' => 'required|string|max:20',
+            'cnpj' => 'required|string|max:20|unique:clinicas',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password), 
+            'password' => Hash::make($request->password),
             'role' => 'admin',
         ]);
 
-        return redirect()->route('login')->with('success', 'Registro realizado com sucesso.');
+        $clinica = Clinica::create([
+            'nome' => $request->nome,
+            'endereco' => $request->endereco,
+            'telefone' => $request->telefone,
+            'cnpj' => $request->cnpj,
+            'user_id' => $user->id,
+        ]);
+
+
+        $user->update([
+            'clinica_id' => $clinica->id
+        ]);
+
+
+        Auth::login($user);
+
+
+        return redirect()->route('admin.index')
+            ->with('success', 'Conta criada com sucesso!');
     }
 
     public function login()
@@ -92,7 +116,9 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
     public function me()
     {
-
+        if (!Auth::check()) {
+            return redirect()->route('login')->withErrors(['email' => 'Você precisa estar logado para acessar esta página.']);
+        }
         $user = Auth::user();
 
         $clinica = null;

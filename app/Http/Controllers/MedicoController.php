@@ -18,7 +18,7 @@ class MedicoController extends Controller
     {
 
 
-        $query = Medico::with('especialidade');
+        $query = Medico::with('especialidade')->where('clinica_id', Auth::user()->clinica_id);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -63,9 +63,10 @@ class MedicoController extends Controller
             'hora_inicio' => 'required',
             'hora_fim' => 'required',
         ]);
+        $id_clinica = Clinica::where('user_id', Auth::id())->first()->id ?? null;
 
         // Transação para garantir que tudo seja salvo ou nada seja salvo
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($id_clinica, $request) {
 
             // Cria o usuário do médico
             $user = User::create([
@@ -73,6 +74,7 @@ class MedicoController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role' => 'medico',
+                'clinica_id' => $id_clinica,
             ]);
 
             // Verifica se o usuário selecionou "Outra especialidade"
@@ -98,7 +100,7 @@ class MedicoController extends Controller
                 'especialidade_id' => $especialidadeId,
                 'telefone' => $request->telefone,
                 'user_id' => $user->id,
-                'clinica_id' => Clinica::where('user_id', Auth::id())->first()->id ?? null,
+                'clinica_id' => $id_clinica,
                 'horario_inicio' => $request->hora_inicio,
                 'horario_fim' => $request->hora_fim,
             ]);

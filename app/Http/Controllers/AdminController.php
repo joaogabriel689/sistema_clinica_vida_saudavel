@@ -16,11 +16,11 @@ class AdminController extends Controller
     {
 
         $clinica = null;
-        
+        $clinica_id = Auth::user()->clinica_id;
         $clinica = Clinica::where('user_id', Auth::id())->first();
-        $quantidade_convenios = Clinica::where('user_id', Auth::id())->withCount('convenios')->first()->convenios_count;
-        $quantidade_recepcionistas = User::where('role', 'recepcionista')->count();
-        $quantidade_medicos = User::where('role', 'medico')->count();
+        $quantidade_convenios = Clinica::where('user_id', Auth::id())->withCount('convenios')->first()?->convenios_count;
+        $quantidade_recepcionistas = User::where('role', 'recepcionista')->where('clinica_id', $clinica->id ?? null)->count();
+        $quantidade_medicos = User::where('role', 'medico')->where('clinica_id', $clinica->id ?? null)->count();
         
     
         return view('admin.index', compact(['clinica', 'quantidade_convenios', 'quantidade_recepcionistas', 'quantidade_medicos']));
@@ -29,7 +29,7 @@ class AdminController extends Controller
     public function list_pacientes()
     {
 
-        $pacientes = Paciente::all();
+        $pacientes = Paciente::all()->where('clinica_id', Auth::user()->clinica_id);
         return view('pacientes.index', compact('pacientes'));
     }
 

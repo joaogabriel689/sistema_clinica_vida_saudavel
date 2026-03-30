@@ -16,9 +16,6 @@ class RoleMiddleware
      */
     public function handle($request, Closure $next, $role)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
 
         if (Auth::user()->role !== $role) {
             abort(403, 'Acesso não autorizado');
