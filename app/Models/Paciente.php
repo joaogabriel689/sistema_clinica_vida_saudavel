@@ -29,4 +29,8 @@ class Paciente extends Model
             'convenio_paciente'
         );
     }
+    public function clinica()
+    {
+        return $this->belongsTo(Clinica::class);
+    }
 }

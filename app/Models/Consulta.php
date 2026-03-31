@@ -39,5 +39,9 @@ class Consulta extends Model
     {
         return $this->belongsTo(Convenio::class);
     }
+    public function clinica()
+    {
+        return $this->belongsTo(Clinica::class);
+    }
 
 }

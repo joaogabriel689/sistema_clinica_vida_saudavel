@@ -17,7 +17,10 @@ use App\Services\MedicoService;
 class MedicoController extends Controller
 {
     protected MedicoService $medicoService;
-
+    public function __construct(MedicoService $medicoService)
+    {
+        $this->medicoService = $medicoService;
+    }
     public function index(Request $request)
     {
 
@@ -45,7 +48,7 @@ class MedicoController extends Controller
     public function create()
     {
 
-;
+
 
         $especialidades = Especialidade::all();
         return view('medicos.create', compact('especialidades'));
@@ -58,7 +61,7 @@ class MedicoController extends Controller
     {
 
         $this->medicoService->criarMedico($dados = $request->only([
-            'nome', 'crm', 'especialidade', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
+            'nome', 'crm', 'especialidade','password', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
         ]));
 
         return redirect()

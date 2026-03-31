@@ -15,6 +15,10 @@ use App\Http\Requests\LoginUserRequest;
 class AuthController extends Controller // Corrigi o nome da classe para AuthController
 {
     protected UserService $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
     public function register()
     {
         return view('auth.register');

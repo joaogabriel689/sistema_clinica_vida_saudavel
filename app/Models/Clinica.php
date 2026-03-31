@@ -30,4 +30,12 @@ class Clinica extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function pacientes()
+    {
+        return $this->hasMany(Paciente::class);
+    }
+    public function consultas()
+    {
+        return $this->hasMany(Consulta::class);
+    }
 }

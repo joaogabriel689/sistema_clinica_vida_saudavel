@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 class ConsultaController extends Controller
 {
     protected ConsultaService $consultaService;
+    
 
     public function __construct(ConsultaService $consultaService)
     {
