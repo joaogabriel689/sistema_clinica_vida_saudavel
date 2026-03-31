@@ -2,345 +2,130 @@
 
 ## 📄 Visão Geral
 
-O Sistema Clínica Vida Saudável é uma aplicação web desenvolvida para gerenciar operações básicas de uma clínica médica, incluindo cadastro de pacientes, médicos, recepcionistas, convênios e agendamento de consultas.
+O Sistema Clínica Vida Saudável é uma aplicação web desenvolvida para gerenciar operações de uma clínica médica, incluindo cadastro de pacientes, médicos, recepcionistas, convênios e agendamento de consultas.
 
-O projeto foi iniciado como um estudo de caso acadêmico na disciplina de Banco de Dados, com foco em modelagem relacional, implementação de regras de negócio e integração entre aplicação web e banco de dados.
-
-Desde sua concepção, o sistema vem sendo estruturado com boas práticas de desenvolvimento, permitindo sua evolução para um possível produto real de gestão de clínicas (SaaS).
+O projeto foi iniciado como um estudo acadêmico na disciplina de Banco de Dados, com foco em modelagem relacional e regras de negócio. Atualmente, evoluiu para um projeto mais estruturado, com foco em boas práticas de desenvolvimento e potencial para se tornar um produto real (SaaS).
 
 ---
 
-# 🎯 Objetivos do Projeto
+## 🎯 Objetivos do Projeto
 
-O projeto tem como objetivo principal aplicar conceitos fundamentais de:
-
-- Modelagem de banco de dados relacionais
-- Desenvolvimento backend com Laravel
-- Controle de acesso baseado em papéis (RBAC)
-- Implementação de regras de negócio
-- Estruturação de aplicações web organizadas
-- Integração entre sistema web e banco de dados
-
-Além do caráter acadêmico, o sistema também funciona como projeto de aprendizado e portfólio de desenvolvimento web.
+- Aplicar modelagem de banco de dados relacionais
+- Desenvolver backend com Laravel
+- Implementar controle de acesso baseado em papéis (RBAC)
+- Criar regras de negócio consistentes
+- Estruturar uma aplicação web organizada
+- Integrar sistema web com banco de dados
 
 ---
 
-# 🧰 Tecnologias Utilizadas
-
-O sistema foi desenvolvido utilizando as seguintes tecnologias:
+## 🧰 Tecnologias Utilizadas
 
 - Laravel
 - PHP
 - MySQL
 - Bootstrap
+- JavaScript (Fetch API)
 - RBAC (Role-Based Access Control)
 
 ---
 
-# 🔐 Controle de Acesso (RBAC)
+## 🔐 Controle de Acesso (RBAC)
 
-O sistema implementa controle de permissões baseado em papéis (RBAC – Role-Based Access Control).
+O sistema utiliza controle de acesso baseado em papéis.
 
-Cada tipo de usuário possui permissões específicas dentro do sistema.
-
-## Papéis Disponíveis
+### Papéis
 
 - Administrador
 - Recepcionista
 - Médico
 
+Cada papel possui permissões específicas dentro do sistema.
+
 ---
 
-# 👥 Regras de Negócio
+## 👥 Regras de Negócio
 
-## Administrador
+### Administrador
 
-O administrador possui controle total sobre a configuração da clínica e gestão de usuários.
+Responsável pela gestão geral da clínica.
 
-### Funcionalidades
-
-- Criar e gerenciar clínicas
-- Criar contas de médicos
-- Criar contas de recepcionistas
+- Gerenciar clínicas
+- Gerenciar médicos
+- Gerenciar recepcionistas
 - Gerenciar convênios
-- Visualizar pacientes cadastrados
-- Gerenciar profissionais da clínica
+- Visualizar pacientes
 
 ---
 
-## Recepcionista
+### Recepcionista
 
-A recepcionista é responsável pelo atendimento ao paciente e pela organização da agenda médica.
-
-### Funcionalidades
+Responsável pelo fluxo operacional da clínica.
 
 - Cadastrar pacientes
-- Gerenciar consultas
-- Organizar agenda médica
-- Visualizar agenda da clínica
-
-### Observação
-
-Nesta versão do sistema, pacientes não possuem acesso direto ao sistema.
+- Agendar consultas
+- Gerenciar agenda
+- Visualizar atendimentos
 
 ---
 
-## Médico
+### Médico
 
-O médico possui acesso restrito apenas às suas informações e consultas.
+Possui acesso apenas às suas informações.
 
-### Funcionalidades
-
-- Visualizar sua agenda diária
-- Acessar seu dashboard médico
-- Visualizar pacientes agendados para atendimento
+- Visualizar agenda
+- Visualizar pacientes agendados
 
 ---
 
-# 📅 Sistema de Agendamento
+## 📅 Sistema de Agendamento
 
-O sistema já possui estrutura funcional de agendamento de consultas, incluindo regras básicas de consistência.
+O sistema possui regras para garantir consistência da agenda.
 
-## Regras Implementadas
+### Regras
 
-- Um médico não pode possuir duas consultas no mesmo horário
-- Um paciente não pode possuir duas consultas no mesmo horário
-- O sistema verifica conflitos antes de registrar uma nova consulta
-
-Essas regras garantem integridade básica na agenda da clínica.
+- Um médico não pode ter duas consultas no mesmo horário
+- Um paciente não pode ter duas consultas no mesmo horário
+- O sistema valida conflitos antes do agendamento
 
 ---
 
-# ⚙️ Funcionalidades Implementadas
+## ⚙️ Funcionalidades Implementadas
 
-Atualmente o sistema possui as seguintes funcionalidades:
-
-- Sistema de autenticação (Login / Logout)
+- Sistema de autenticação (login e logout)
 - Cadastro de clínicas
 - CRUD de médicos
 - CRUD de recepcionistas
 - CRUD de pacientes
 - CRUD de convênios
 - Agendamento de consultas
-- Validação de conflitos de agenda
+- Validação de conflitos de horário
 - Controle de acesso por papéis (RBAC)
-- Dashboard separado por perfil
-- APIs internas para consulta de horários médicos
-- Filtros e pesquisas nas telas de listagem
-- Paginação de registros
+- Dashboard separado por tipo de usuário
+- Insights básicos (consultas, faturamento, pacientes)
+- Integração dinâmica entre especialidade e médicos
+- Exibição de horários de atendimento por médico
+- Filtros e buscas nas listagens
+- Paginação de dados
 - Alteração de status de consultas
-- Confirmação de pagamento de consultas diretamente pela listagem
+- Confirmação de pagamento diretamente na listagem
+- Interface responsiva com Bootstrap
+- Melhorias de UX (feedback visual, loading, interações)
 
 ---
 
-# 🖥️ Interface
+## 🖥️ Interface
 
-A interface do sistema foi desenvolvida utilizando Bootstrap, proporcionando:
+A interface foi construída com Bootstrap e aprimorada com estilos customizados.
 
 - Layout responsivo
-- Interface simples e organizada
-- Facilidade de manutenção
-- Componentização básica de interface
+- Componentes reutilizáveis
+- Organização visual clara
+- Feedback visual para ações do usuário
+- Interações dinâmicas com JavaScript
 
 ---
 
-# 🔗 Estrutura de Rotas
-
-## Rotas Gerais
-
-```
-GET /
-GET login
-POST logout
-GET register
-POST store_login
-POST store_register
-GET dashboard_split
-GET me
-```
-
----
-
-## Rotas do Administrador
-
-```
-GET admin
-GET admin/criar_clinica
-POST admin/store_clinica
-```
-
----
-
-## Rotas de Convênios
-
-```
-GET admin/convenios
-POST admin/convenios
-GET admin/convenios/create
-PUT admin/convenios/{id}
-DELETE admin/convenios/{id}
-GET admin/convenios/{id}/edit
-```
-
----
-
-## Rotas de Médicos
-
-```
-GET admin/medicos
-POST admin/medicos
-GET admin/medicos/create
-GET admin/medicos/{id}
-PUT admin/medicos/{id}
-DELETE admin/medicos/{id}
-GET admin/medicos/{id}/edit
-```
-
----
-
-## Rotas de Recepcionistas
-
-```
-GET admin/recepcionistas
-POST admin/recepcionistas
-GET admin/recepcionistas/create
-GET admin/recepcionistas/{id}
-PUT admin/recepcionistas/{id}
-DELETE admin/recepcionistas/{id}
-GET admin/recepcionistas/{id}/edit
-```
-
----
-
-## Rotas de Pacientes
-
-```
-POST pacientes
-GET pacientes/create
-GET pacientes/{id}
-PUT pacientes/{id}
-DELETE pacientes/{id}
-GET pacientes/{id}/edit
-```
-
----
-
-## Rotas de Consultas
-
-```
-GET consultas
-POST consultas
-GET consultas/create
-GET consultas/{id}
-PUT consultas/{id}
-DELETE consultas/{id}
-GET consultas/{id}/edit
-```
-
----
-
-## Rotas de Dashboard
-
-### Dashboard da Recepcionista
-
-```
-GET recepcionista
-```
-
-### Dashboard do Médico
-
-```
-GET medicos/dashboard
-```
-
----
-
-## Rotas de API Interna
-
-Essas rotas são utilizadas para consultas dinâmicas dentro do sistema.
-
-```
-GET api/medico/{id}/horarios
-GET api/medicos/{especialidade}
-```
-
----
-
-# 🧑‍💻 Instalação do Projeto
-
-## 1. Clonar o Repositório
-
-```
-git clone https://github.com/seu-usuario/sistema-clinica.git
-```
-
-Entrar no diretório do projeto:
-
-```
-cd sistema-clinica
-```
-
----
-
-## 2. Instalar Dependências
-
-```
-composer install
-```
-
----
-
-## 3. Criar Arquivo de Configuração
-
-Copiar o arquivo de exemplo:
-
-```
-cp .env.example .env
-```
-
----
-
-## 4. Gerar Chave da Aplicação
-
-```
-php artisan key:generate
-```
-
----
-
-## 5. Configurar Banco de Dados
-
-Editar o arquivo `.env`:
-
-```
-DB_DATABASE=clinica
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
----
-
-## 6. Executar Migrations
-
-```
-php artisan migrate
-```
-
----
-
-## 7. Iniciar Servidor Local
-
-```
-php artisan serve
-```
-
-A aplicação estará disponível em:
-
-```
-http://localhost:8000
-```
-
----
 
 # 📚 Contexto Acadêmico
 
@@ -366,7 +151,7 @@ Novas funcionalidades e melhorias continuam sendo implementadas.
 
 As próximas evoluções previstas para o sistema incluem:
 
-## Melhorias de Usabilidade
+## Melhorias de Usabilidade- feito 
 
 Sistema de busca para:
 
@@ -376,7 +161,7 @@ Sistema de busca para:
 
 ---
 
-## Validações de Dados
+## Validações de Dados- feito tbm
 
 - Validação de CPF
 - Validação de CRM
@@ -386,7 +171,7 @@ Sistema de busca para:
 
 ---
 
-## Melhorias no Sistema de Autenticação
+## Melhorias no Sistema de Autenticação- feito ja 
 
 Reestruturação da lógica de acesso.
 
@@ -406,7 +191,7 @@ Atualmente o sistema redireciona diretamente para `/me`.
 
 ---
 
-## auditoria de dados
+## auditoria de dados- nao feito
 
 o sistema deve conter tabelas de auditorias para rastreamento de açoes dos usuarios
 
@@ -414,7 +199,7 @@ o sistema deve conter tabelas de auditorias para rastreamento de açoes dos usua
 
 ---
 
-## relatorios
+## relatorios- insites basicos feitos, mas relatorios completos nao
 
 -financeiros
 -gerais
@@ -423,7 +208,7 @@ o sistema deve conter tabelas de auditorias para rastreamento de açoes dos usua
 
 
 
-## Comunicação com Pacientes
+## Comunicação com Pacientes- nao feito
 
 Implementação futura de rotina de confirmação automática de consultas via WhatsApp.
 
