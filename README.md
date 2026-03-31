@@ -127,33 +127,78 @@ A interface foi construída com Bootstrap e aprimorada com estilos customizados.
 ---
 
 
-# 📚 Contexto Acadêmico
 
-Este projeto foi desenvolvido como exercício prático envolvendo:
+---
+
+## 📚 Contexto Acadêmico
+
+Projeto desenvolvido com foco em:
 
 - Modelagem relacional
-- Entidades e relacionamentos
 - Normalização de banco de dados
-- Implementação de regras de negócio
-- Integração entre aplicação web e banco de dados
+- Regras de negócio
+- Integração entre sistema e banco
 
 ---
 
-# 🚧 Status do Projeto
+## 🚧 Status do Projeto
 
-O sistema encontra-se em desenvolvimento ativo.
-
-Novas funcionalidades e melhorias continuam sendo implementadas.
+O sistema encontra-se em desenvolvimento ativo e já possui base sólida funcional.
 
 ---
 
+## 🔮 Próximos Passos
 
-# 📌 Observação Final
+### 📊 Relatórios
 
-Embora tenha sido iniciado como um projeto acadêmico, o Sistema Clínica Vida Saudável está sendo estruturado com foco em:
+- Relatórios financeiros completos
+- Relatórios por médico
+- Relatórios por recepcionista
+- Relatórios por paciente
+- Relatórios por período
 
-- organização de código
-- separação de responsabilidades
-- arquitetura escalável
+---
 
-Isso permite que o sistema evolua gradualmente para um produto real de gestão clínica (SaaS).
+### 📈 Dashboard Avançada
+
+- Comparação entre períodos
+- Indicadores de crescimento
+- Métricas mais estratégicas
+- Alertas inteligentes
+
+---
+
+### 🧾 Auditoria de Dados
+
+- Registro de ações dos usuários
+- Histórico de alterações
+- Rastreabilidade de operações
+
+---
+
+### 📱 Comunicação com Pacientes
+
+- Confirmação automática de consultas
+- Lembretes via WhatsApp
+- Cancelamento automático
+
+---
+
+### 🧠 Melhorias Técnicas
+
+- Refatoração para Service Layer
+- Melhor organização de código
+- Otimização de queries
+- Padronização de APIs
+
+---
+
+## 📌 Observação Final
+
+O sistema está sendo desenvolvido com foco em:
+
+- Boas práticas de programação
+- Código limpo
+- Escalabilidade
+
+Com potencial real de evolução para um produto SaaS de gestão de clínicas.
