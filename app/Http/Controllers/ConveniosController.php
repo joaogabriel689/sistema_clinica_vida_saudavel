@@ -72,6 +72,12 @@ class ConveniosController extends Controller
 
     public function update(StoreConvenioRequest $request, $id)
     {
+        if ($request->clinica_id != Auth::user()->clinica_id) {
+            return redirect()->route('admin.convenios.index')->with('error', 'Ação não autorizada.');
+        }
+        if(Convenio::where('codigo', $request->codigo)->where('clinica_id', Auth::user()->clinica_id)->where('id', '!=', $id)->exists()) {
+            return redirect()->route('admin.convenios.index')->with('error', 'Código já cadastrado');
+        }
 
 
         $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();

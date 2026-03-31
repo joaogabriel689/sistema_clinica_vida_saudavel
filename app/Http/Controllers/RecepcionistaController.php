@@ -48,6 +48,12 @@ class RecepcionistaController extends Controller
      */
     public function store(StoreRecepcionistaRequest $request)
     {
+        if(!Auth::user()->clinica_id) {
+            return redirect()->route('admin.recepcionistas')->with('error', 'Você precisa estar associado a uma clínica para criar recepcionistas.');
+        }
+        if(User::where('email', $request->email)->exists()) {
+            return redirect()->route('admin.recepcionistas')->with('error', 'Email já cadastrado');
+        }
   
 
         try {

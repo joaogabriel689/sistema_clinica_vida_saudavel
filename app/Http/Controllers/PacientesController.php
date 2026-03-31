@@ -20,6 +20,12 @@ class PacientesController extends Controller
 
     public function store(StorePacienteRequest $request)
     {
+        if(!Auth::user()->clinica_id) {
+            return redirect()->route('admin.pacientes')->with('error', 'Você precisa estar associado a uma clínica para criar pacientes.');
+        }
+        if(Paciente::where('cpf', $request->cpf)->where('clinica_id', Auth::user()->clinica_id)->exists()) {
+            return redirect()->route('admin.pacientes')->with('error', 'CPF já cadastrado');
+        }
 
 
         $id_clinica = Auth::user()->clinica_id;

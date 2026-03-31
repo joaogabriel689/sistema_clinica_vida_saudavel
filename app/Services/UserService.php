@@ -10,6 +10,12 @@ class UserService
 {
     public function criarUsuario(array $dados): User
     {
+        if(User::where('email', $dados['email'])->exists()) {
+            throw new \Exception('Email já cadastrado');
+        }
+        if(Clinica::where('cnpj', $dados['cnpj'])->exists()) {
+            throw new \Exception('CNPJ já cadastrado');
+        }
         $user = User::create([
             'name' => $dados['name'],
             'email' => $dados['email'],

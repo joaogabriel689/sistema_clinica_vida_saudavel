@@ -14,6 +14,12 @@ class MedicoService
 {
     public function criarMedico(array $dados): Medico
     {
+        if(Medico::where('crm', $dados['crm'])->where('clinica_id', Auth::user()->clinica_id)->exists()) {
+            throw new \Exception('CRM já cadastrado');
+        }
+        if(User::where('email', $dados['email'])->exists()) {
+            throw new \Exception('Email já cadastrado');
+        }
         $id_clinica = Auth::user()->clinica_id;
         DB::transaction(function () use ($id_clinica, $dados) {
 
