@@ -11,13 +11,13 @@ class Consulta extends Model
         'paciente_id',
         'clinica_id',
         'medico_id',
-        'especialidade_id',
         'convenio_id',
         'data_hora_inicio',
         'data_hora_fim',
         'valor',
         'status',
-        'pagamento_confirmado'
+        'pago',
+
     ];
 
     public function paciente()

@@ -8,89 +8,41 @@ use App\Models\Paciente;
 use App\Models\Clinica;
 use App\Models\User;
 use App\Http\Requests\StoreClinicaRequest;
+use App\Services\DashboardService;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
-
+    protected $dashboardService;
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
     public function index()
     {
-        $user = Auth::user();
+        try {
+            $dados = $this->dashboardService->adminDashboard();
+        } catch (\Exception $e) {
 
-        $clinica = Clinica::where('user_id', $user->id)->first();
-
-        // Evita erro se não tiver clínica
-        if (!$clinica) {
-            return view('admin.index', [
-                'clinica' => null,
-                'quantidade_convenios' => 0,
-                'quantidade_recepcionistas' => 0,
-                'quantidade_medicos' => 0,
-                'consultas_hoje' => 0,
-                'consultas_mes' => 0,
-                'faturamento_mes' => 0,
-                'novos_pacientes_mes' => 0,
-                'ticket_medio' => 0,
+            Log::error('Erro no dashboard admin', [
+                'erro' => $e->getMessage(),
+                'user_id' => Auth::id()
             ]);
+
+            return redirect()
+                ->route('me')
+                ->with('error', 'Erro ao carregar dashboard');
         }
 
-        // Datas
-        $hoje = now();
-        $mes = $hoje->month;
-        $ano = $hoje->year;
-
-        // Relacionamentos
-        $consultas = $clinica->consultas();
-        $pacientes = $clinica->pacientes();
-
-        // Contagens
-        $quantidade_convenios = $clinica->convenios()->count();
-
-        $quantidade_recepcionistas = User::where('role', 'recepcionista')
-            ->where('clinica_id', $clinica->id)
-            ->count();
-
-        $quantidade_medicos = User::where('role', 'medico')
-            ->where('clinica_id', $clinica->id)
-            ->count();
-
-        $consultas_hoje = $consultas
-            ->whereDate('data_hora_inicio', $hoje)
-            ->count();
-
-        // Clonar query pra não "sujar"
-        $consultas_mes_query = $clinica->consultas()
-            ->whereMonth('data_hora_inicio', $mes)
-            ->whereYear('data_hora_inicio', $ano);
-
-        $consultas_mes = $consultas_mes_query->count();
-
-        $faturamento_mes = (clone $consultas_mes_query)->sum('valor');
-
-        $novos_pacientes_mes = $pacientes
-            ->whereMonth('created_at', $mes)
-            ->whereYear('created_at', $ano)
-            ->count();
-
-        $ticket_medio = $consultas_mes > 0
-            ? $faturamento_mes / $consultas_mes
-            : 0;
-
-        return view('admin.index', compact(
-            'clinica',
-            'quantidade_convenios',
-            'quantidade_recepcionistas',
-            'quantidade_medicos',
-            'consultas_hoje',
-            'consultas_mes',
-            'faturamento_mes',
-            'novos_pacientes_mes',
-            'ticket_medio'
-        ));
+        return view('admin.index', $dados);
     }
     public function list_pacientes()
     {
-
-        $pacientes = Paciente::all()->where('clinica_id', Auth::user()->clinica_id);
+        try{
+            $pacientes = Paciente::all()->where('clinica_id', Auth::user()->clinica_id);
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard_split')->with('error', 'Erro ao carregar dados dos pacientes: ' . $e->getMessage());
+        }
         return view('pacientes.index', compact('pacientes'));
     }
 
@@ -104,15 +56,19 @@ class AdminController extends Controller
     public function store_clinica(StoreClinicaRequest $request)
     {
 
+        try{
+            Clinica::create([
+                'nome' => $request->nome,
+                'endereco' => $request->endereco,
+                'telefone' => $request->telefone,
+                'cnpj' => $request->cnpj,
+                'user_id' => Auth::id(),
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.criar_clinica')->with('error', 'Erro ao criar clínica: ' . $e->getMessage());
+        }
 
 
-        Clinica::create([
-            'nome' => $request->nome,
-            'endereco' => $request->endereco,
-            'telefone' => $request->telefone,
-            'cnpj' => $request->cnpj,
-            'user_id' => Auth::id(),
-        ]);
 
         return redirect()->route('admin.index')->with('success', 'Clínica criada com sucesso.');
     }

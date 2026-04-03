@@ -128,8 +128,18 @@ class ConsultaController extends Controller
     public function store(StoreConsultaRequest $request)
     {
 
-
-        $this->consultaService->criarConsulta($request->all());
+        $dados = $request->only([
+            'data_hora_inicio',
+            'data_hora_fim',
+            'valor',
+            'medico_id',
+            'paciente_id',
+            'convenio_id',
+            'status',
+            'observacoes',
+        ]);
+        $dados['clinica_id'] = Auth::user()->clinica_id;
+        $this->consultaService->criarConsulta($dados);
 
         return redirect()
             ->route('consultas.list')
@@ -191,32 +201,45 @@ class ConsultaController extends Controller
             ->where('clinica_id', $clinicaId)
             ->firstOrFail();
 
-        // 🔹 atualização rápida
-        if ($request->has('status') || $request->has('pago')) {
-
-            if ($request->has('status')) {
-                $consulta->status = $request->status;
-            }
-
-            if ($request->has('pago')) {
-                $consulta->pago = (bool) $request->pago;
-            }
-
-            $consulta->save();
-
-            return redirect()->route('consultas.list')
-                ->with('success', 'Consulta atualizada.');
-        }
-
-
-
-        $this->consultaService->atualizarConsulta($consulta, $request->all());
+        // 🔹 atualização completa
+        $this->consultaService->atualizarConsulta(
+            $consulta,
+            $request->validated()
+        );
 
         return redirect()
             ->route('consultas.list')
             ->with('success', 'Consulta atualizada com sucesso.');
     }
 
+    public function confirmarPagamento(string $id)
+    {
+        $clinicaId = Auth::user()->clinica_id;
+
+        $consulta = Consulta::where('id', $id)
+            ->where('clinica_id', $clinicaId)
+            ->firstOrFail();
+
+        $this->consultaService->confirmarPagamento($consulta);
+
+        return redirect()
+            ->route('consultas.list')
+            ->with('success', 'Pagamento confirmado.');
+    }
+    public function alterarStatus(string $id, string $status)
+    {
+        $clinicaId = Auth::user()->clinica_id;
+
+        $consulta = Consulta::where('id', $id)
+            ->where('clinica_id', $clinicaId)
+            ->firstOrFail();
+
+        $this->consultaService->alterarStatus($consulta, $status);
+
+        return redirect()
+            ->route('consultas.list')
+            ->with('success', 'Status atualizado.');
+    }
     /*
     |--------------------------------------------------------------------------
     | DELETE

@@ -10,6 +10,7 @@ use App\Models\Especialidade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\http\RedirectResponse;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 
 
@@ -25,7 +26,9 @@ class ConsultaService
         if ($dataInicio < now() || $dataFim < now()) {
             abort(422, 'A data e hora da consulta devem ser futuras.');
         }
-
+        if ($dataInicio->diffInMinutes($dataFim) < 10) {
+            throw new Exception('Consulta muito curta.');
+        }
         /*
         |----------------------------------------
         | VALIDA MÉDICO E PACIENTE
@@ -109,36 +112,55 @@ class ConsultaService
     }
     protected function calcularPreco(array $dados): float
     {
-        $especialidade = Especialidade::find($dados['especialidade_id']);
+        if (empty($dados['convenio_id'])) {
+            return $dados['valor'];
+        }
         $convenio = Convenio::find($dados['convenio_id']);
 
-        if (!$especialidade || !$convenio) {
+        if (!$convenio) {
             abort(403, 'Dados inválidos para esta clínica.');
         }
 
-        $precoBase = $especialidade->preco_consulta;
-        $desconto = $convenio->desconto / 100;
+        $precoBase = $dados['valor'];
+        $percentual_desconto = $convenio->percentual_desconto / 100;
 
-        return round($precoBase * (1 - $desconto), 2);
+        return round($precoBase * (1 - $percentual_desconto), 2);
     }
     public function criarConsulta(array $dados): Consulta
     {
-        $this->validarConflitos($dados);
-        $dados['preco'] = $this->calcularPreco($dados);
-        return Consulta::create($dados);
-    }
+        return DB::transaction(function () use ($dados) {
 
+            $this->validarConflitos($dados);
+
+            $dados['valor'] = $this->calcularPreco($dados);
+
+            return Consulta::create($dados);
+        });
+    }
     public function atualizarConsulta(Consulta $consulta, array $dados): Consulta
     {
         $this->validarConflitos($dados, $consulta);
-        $dados['preco'] = $this->calcularPreco($dados);
+        $dados['valor'] = $this->calcularPreco($dados);
         $consulta->update($dados);
+        return $consulta;
+    }
+    public function confirmarPagamento(Consulta $consulta): Consulta
+    {
+        $consulta->update(['pago' => 1]);
+        return $consulta;
+    }
+    public function alterarStatus(Consulta $consulta, string $status): Consulta
+    {
+        if (!in_array($status, ['agendada', 'confirmada', 'realizada', 'cancelada', 'faltou'])) {
+            throw new Exception('Status inválido');
+        }
+        $consulta->update(['status' => $status]);
         return $consulta;
     }
 
     public function excluirConsulta(Consulta $consulta): void
     {
-        
+
         $consulta->delete();
     }
 }

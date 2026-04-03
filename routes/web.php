@@ -19,15 +19,15 @@ use App\Http\Controllers\ConsultaController;
 Route::get('/', function () {
     return view('welcome');
 })->name('index');
+// Route::middleware('throttle:10,1')->group(function () {
+    Route::controller(AuthController::class)->group(function () {
+        Route::get('/login', 'login')->name('login');
+        Route::post('/store_login', 'store_login')->name('auth-login');
 
-Route::controller(AuthController::class)->group(function () {
-    Route::get('/login', 'login')->name('login');
-    Route::post('/store_login', 'store_login')->name('auth-login');
-
-    Route::get('/register', 'register')->name('register');
-    Route::post('/store_register', 'store_register')->name('auth-register');
-});
-
+        Route::get('/register', 'register')->name('register');
+        Route::post('/store_register', 'store_register')->name('auth-register');
+    });
+// });
 /*
 |--------------------------------------------------------------------------
 | Rotas protegidas
@@ -166,6 +166,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/edit', [ConsultaController::class, 'edit'])->name('consultas.edit');
 
             Route::put('/{id}', [ConsultaController::class, 'update'])->name('consultas.update');
+            Route::put('/{id}/pagar', [ConsultaController::class, 'confirmarPagamento'])->name('consultas.confirmar_pagamento');
+            Route::put('/{id}/status', [ConsultaController::class, 'alterarStatus'])->name('consultas.alterar_status');
             Route::delete('/{id}', [ConsultaController::class, 'destroy'])->name('consultas.destroy');
         });
     });

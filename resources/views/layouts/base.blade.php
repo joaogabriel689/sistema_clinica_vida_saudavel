@@ -501,17 +501,43 @@
     </div>
 
     <nav class="sidebar-nav">
+        @if(auth()->check())
         <div class="sidebar-section-label">Geral</div>
 
-        <a href="{{ route('index') }}" class="nav-link {{ request()->routeIs('index') ? 'active' : '' }}">
-            <i class="bi bi-grid-1x2"></i> Dashboard
-        </a>
+
 
         <a href="{{ route('dashboard_split') }}" class="nav-link {{ request()->routeIs('dashboard_split') ? 'active' : '' }}">
             <i class="bi bi-speedometer2"></i> Meu Painel
         </a>
 
         <div class="sidebar-section-label">Operacional</div>
+            @if(auth()->user()->role == 'medico')
+             <a href="#" class="nav-link {{ request()->routeIs('consultas.minhas') ? 'active' : '' }}">
+                <i class="bi bi-calendar2-check"></i> Minhas Consultas
+            </a>
+            @elseif (auth()->user()->role == 'admin')
+
+                    <a href="{{ route('admin.medicos') }}" class="nav-link {{ request()->routeIs('admin.medicos*') ? 'active' : '' }}">
+                        <i class="bi bi-person-badge"></i> Médicos
+                    </a>
+
+                    <a href="{{ route('admin.recepcionistas') }}" class="nav-link {{ request()->routeIs('admin.recepcionistas*') ? 'active' : '' }}">
+                        <i class="bi bi-person-workspace"></i> Recepcionistas
+                    </a>
+
+                    <a href="{{ route('admin.convenios.index') }}" class="nav-link {{ request()->routeIs('admin.convenios*') ? 'active' : '' }}">
+                        <i class="bi bi-shield-check"></i> Convênios
+                    </a>
+            @elseif(auth()->user()->role == 'recepcionista')
+                    <a href="{{ route('admin.pacientes') }}" class="nav-link {{ request()->routeIs('admin.pacientes*') ? 'active' : '' }}">
+                        <i class="bi bi-person-badge"></i> Médicos
+                    </a>
+
+                    <a href="{{ route('consultas.list') }}" class="nav-link {{ request()->routeIs('consultas.*') ? 'active' : '' }}">
+                        <i class="bi bi-person-workspace"></i> Recepcionistas
+                    </a>
+
+
 
         <a href="{{ route('consultas.list') }}" class="nav-link {{ request()->routeIs('consultas.*') ? 'active' : '' }}">
             <i class="bi bi-calendar2-check"></i> Consultas
@@ -520,26 +546,21 @@
         <a href="#" class="nav-link">
             <i class="bi bi-people"></i> Pacientes
         </a>
+        @endif
 
-        <div class="sidebar-section-label">Administração</div>
 
-        <a href="{{ route('admin.medicos') }}" class="nav-link {{ request()->routeIs('admin.medicos*') ? 'active' : '' }}">
-            <i class="bi bi-person-badge"></i> Médicos
-        </a>
-
-        <a href="{{ route('admin.recepcionistas') }}" class="nav-link {{ request()->routeIs('admin.recepcionistas*') ? 'active' : '' }}">
-            <i class="bi bi-person-workspace"></i> Recepcionistas
-        </a>
-
-        <a href="{{ route('admin.convenios.index') }}" class="nav-link {{ request()->routeIs('admin.convenios*') ? 'active' : '' }}">
-            <i class="bi bi-shield-check"></i> Convênios
-        </a>
 
         <div class="sidebar-section-label">Conta</div>
 
         <a href="{{ route('me') }}" class="nav-link {{ request()->routeIs('me') ? 'active' : '' }}">
             <i class="bi bi-person-circle"></i> Meu Perfil
         </a>
+        @else
+        <div class="sidebar-section-label">Bem-vindo</div>
+        <a href="{{ route('login') }}" class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}">
+            <i class="bi bi-box-arrow-in-right"></i> Entrar
+        </a>
+        @endif
     </nav>
 
     @if(auth()->check())

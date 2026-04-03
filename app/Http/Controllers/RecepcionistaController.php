@@ -9,9 +9,15 @@ use App\Models\User;
 use App\Models\Clinica;
 use App\Http\Requests\StoreRecepcionistaRequest;
 use App\Http\Requests\UpdateRecepcionistaRequest;
+use App\Services\DashboardService;
 
 class RecepcionistaController extends Controller
 {
+    protected DashboardService $dashboardService;
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -48,12 +54,7 @@ class RecepcionistaController extends Controller
      */
     public function store(StoreRecepcionistaRequest $request)
     {
-        if(!Auth::user()->clinica_id) {
-            return redirect()->route('admin.recepcionistas')->with('error', 'Você precisa estar associado a uma clínica para criar recepcionistas.');
-        }
-        if(User::where('email', $request->email)->exists()) {
-            return redirect()->route('admin.recepcionistas')->with('error', 'Email já cadastrado');
-        }
+
   
 
         try {
@@ -124,39 +125,8 @@ class RecepcionistaController extends Controller
 
     public function dashboard()
     {
-
-
-        // Quantidade total de pacientes cadastrados
-        $quantidade_pacientes = \App\Models\Paciente::where('clinica_id', Auth::user()->clinica_id)->count();
-
-        // Quantidade de médicos cadastrados
-        $quantidade_medicos = \App\Models\Medico::where('clinica_id', Auth::user()->clinica_id)->count();
-
-        // Quantidade de consultas marcadas para hoje
-        $quantidade_consultas_hoje = \App\Models\Consulta::where('clinica_id', Auth::user()->clinica_id)->whereDate(
-            'data_hora_inicio',
-            now()->toDateString()
-        )->count();
-
-        // Últimos 5 pacientes cadastrados
-        $pacientes_recentes = \App\Models\Paciente::where('clinica_id', Auth::user()->clinica_id)->latest()
-            ->take(5)
-            ->get();
-
-        // Consultas de hoje (com médico e paciente)
-        $agendas_hoje = \App\Models\Consulta::with(['medico', 'paciente'])
-            ->where('clinica_id', Auth::user()->clinica_id)
-            ->whereDate('data_hora_inicio', now()->toDateString())
-            ->orderBy('data_hora_inicio')
-            ->get();
-
+        $dados = $this->dashboardService->recepcionistaDashboard();
         // Retorna a view com os dados
-        return view('recepcionista.dashboard', compact(
-            'quantidade_pacientes',
-            'quantidade_consultas_hoje',
-            'quantidade_medicos',
-            'pacientes_recentes',
-            'agendas_hoje'
-        ));
+        return view('recepcionista.dashboard', $dados);
     }
 }

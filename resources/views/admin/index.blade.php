@@ -83,15 +83,7 @@
 <div class="welcome-banner fade-in">
     <h4>Bom dia, {{ auth()->user()->name ?? 'Administrador' }} 👋</h4>
     <p>Aqui está o resumo de hoje — {{ \Carbon\Carbon::now()->format('d \d\e F \d\e Y') }}</p>
-    @if($clinica == null)
-        <a href="{{ route('admin.criar_clinica') }}" class="quick-action">
-            <i class="bi bi-plus-circle"></i> Cadastrar clínica
-        </a>
-    @else
-        <a href="{{ route('consultas.create') }}" class="quick-action">
-            <i class="bi bi-calendar2-plus"></i> Agendar consulta
-        </a>
-    @endif
+
 </div>
 
 
@@ -273,7 +265,7 @@ new Chart(ctx, {
         labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
         datasets: [{
             label: 'Consultas',
-            data: [8, 12, 9, 15, 11, 6, 3],
+            data: [{{ $consultas_semana[1] }}, {{ $consultas_semana[2] }}, {{ $consultas_semana[3] }}, {{ $consultas_semana[4] }}, {{ $consultas_semana[5] }}, {{ $consultas_semana[6] }}, {{ $consultas_semana[7] }}],
             backgroundColor: 'rgba(22,163,74,.15)',
             borderColor: '#16a34a',
             borderWidth: 2,

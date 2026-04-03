@@ -7,19 +7,24 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreConvenioRequest;
 
+use function Symfony\Component\Translation\t;
+
 class ConveniosController extends Controller
 {
     public function index(Request $request)
     {
 
+        try{
+            $query = Convenio::query()->where('clinica_id', Auth::user()->clinica_id);
 
-        $query = Convenio::query()->where('clinica_id', Auth::user()->clinica_id);
+            if ($request->search) {
+                $query->where('nome', 'like', '%' . $request->search . '%');
+            }
 
-        if ($request->search) {
-            $query->where('nome', 'like', '%' . $request->search . '%');
+            $convenios = $query->paginate(10);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.convenios.index')->with('error', 'Erro ao carregar convênios: ' . $e->getMessage());
         }
-
-        $convenios = $query->paginate(10);
 
         return view('convenios.index', compact('convenios'));
     }

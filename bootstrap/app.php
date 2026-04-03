@@ -1,5 +1,6 @@
 <?php
 
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,10 +12,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-    $middleware->alias([
-        'role' => \App\Http\Middleware\RoleMiddleware::class,
-    ]);
+
+        // 🔹 Alias
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'auditoria' => \App\Http\Middleware\AuditoriaMiddleware::class,
+        ]);
+
+        // 🔹 Adiciona global no grupo web
+        $middleware->web(append: [
+            \App\Http\Middleware\AuditoriaMiddleware::class,
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->create();

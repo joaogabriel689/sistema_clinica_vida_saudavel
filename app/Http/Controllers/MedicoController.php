@@ -13,31 +13,39 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StoreMedicoRequest;
 use App\Http\Requests\UpdateMedicoRequest;
 use App\Services\MedicoService;
+use App\Services\DashboardService;
 
 class MedicoController extends Controller
 {
     protected MedicoService $medicoService;
-    public function __construct(MedicoService $medicoService)
+    protected DashboardService $dashboardService;
+    public function __construct(MedicoService $medicoService, DashboardService $dashboardService)
     {
         $this->medicoService = $medicoService;
+        $this->dashboardService = $dashboardService;
     }
     public function index(Request $request)
     {
 
+        try{
+            $query = Medico::with('especialidade')->where('clinica_id', Auth::user()->clinica_id);
 
+            if ($request->search) {
+                $query->where(function ($q) use ($request) {
+
+                    $q->where('nome', 'like', "%{$request->search}%")
+                    ->orWhere('crm', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%");
+
+                });
+            }
+
+            $medicos = $query->paginate(10);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.medicos')->with('error', 'Erro ao carregar médicos: ' . $e->getMessage());
+        }
         $query = Medico::with('especialidade')->where('clinica_id', Auth::user()->clinica_id);
 
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-
-                $q->where('nome', 'like', "%{$request->search}%")
-                ->orWhere('crm', 'like', "%{$request->search}%")
-                ->orWhere('email', 'like', "%{$request->search}%");
-
-            });
-        }
-
-        $medicos = $query->paginate(10);
 
         return view('medicos.index', compact('medicos'));
     }
@@ -114,14 +122,8 @@ class MedicoController extends Controller
     }
     public function dashboard()
     {
-
-        $medico = Medico::where('user_id', Auth::id())->first()->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
-        $agenda_medico_hoje = \App\Models\Consulta::where('medico_id', $medico->id)
-            ->whereDate('data_hora_inicio', now()->toDateString())
-            ->with('paciente')
-            ->orderBy('data_hora_inicio')
-            ->get()->where('clinica_id', Auth::user()->clinica_id);
-        return view('medicos.dashboard', compact('medico', 'agenda_medico_hoje'));
+        $dados = $this->dashboardService->medicoDashboard();
+        return view('medicos.dashboard', compact('dados'));
     }
 
     public function porespecialidade($especialidadeId)

@@ -111,6 +111,7 @@ O sistema possui regras para garantir consistência da agenda.
 - Confirmação de pagamento diretamente na listagem
 - Interface responsiva com Bootstrap
 - Melhorias de UX (feedback visual, loading, interações)
+- Auditoria de ações feita
 
 ---
 
@@ -168,13 +169,7 @@ O sistema encontra-se em desenvolvimento ativo e já possui base sólida funcion
 
 ---
 
-### 🧾 Auditoria de Dados
 
-- Registro de ações dos usuários
-- Histórico de alterações
-- Rastreabilidade de operações
-
----
 
 ### 📱 Comunicação com Pacientes
 

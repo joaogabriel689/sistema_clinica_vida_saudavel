@@ -17,17 +17,12 @@
     <div class="card-body py-3">
         <form method="GET" action="{{ route('consultas.list') }}">
             <div class="row g-2 align-items-end">
+
                 <div class="col-md-3">
                     <label class="form-label">Buscar</label>
-                    <div class="input-group">
-                        <span class="input-group-text" style="border-radius:9px 0 0 9px;border:1.5px solid #e5e7eb;border-right:none;background:#f9fafb;">
-                            <i class="bi bi-search text-muted" style="font-size:12px;"></i>
-                        </span>
-                        <input type="text" name="search" class="form-control"
-                               placeholder="Paciente ou médico"
-                               value="{{ request('search') }}"
-                               style="border-left:none;border-radius:0 9px 9px 0;">
-                    </div>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Paciente ou médico"
+                           value="{{ request('search') }}">
                 </div>
 
                 <div class="col-md-2">
@@ -78,6 +73,7 @@
                     <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i></button>
                     <a href="{{ route('consultas.list') }}" class="btn btn-secondary"><i class="bi bi-x"></i></a>
                 </div>
+
             </div>
         </form>
     </div>
@@ -97,79 +93,125 @@
                         <th>Convênio</th>
                         <th>Status</th>
                         <th>Pagamento</th>
-                        <th class="text-end" style="width:140px;">Ações</th>
+                        <th class="text-end">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
 
                 @forelse($consultas as $consulta)
+
+                @php
+                    $statusColors = [
+                        'agendada' => 'secondary',
+                        'confirmada' => 'info',
+                        'realizada' => 'primary',
+                        'cancelada' => 'danger',
+                    ];
+                @endphp
+
                 <tr>
-                    <td><span class="text-muted" style="font-size:12px;">#{{ $consulta->id }}</span></td>
+                    <td>#{{ $consulta->id }}</td>
+
+                    <td>{{ $consulta->paciente->nome ?? '—' }}</td>
 
                     <td>
-                        <div style="font-weight:600;font-size:13.5px;">{{ $consulta->paciente->nome ?? '—' }}</div>
+                        <div>{{ $consulta->medico->nome ?? '—' }}</div>
+                        <small class="text-muted">
+                            {{ $consulta->medico->especialidade->nome ?? '—' }}
+                        </small>
                     </td>
 
                     <td>
-                        <div style="font-size:13.5px;font-weight:500;">{{ $consulta->medico->nome ?? '—' }}</div>
-                        <div style="font-size:11.5px;color:#9ca3af;">{{ $consulta->medico->especialidade->nome ?? '—' }}</div>
-                    </td>
-
-                    <td style="font-size:13px;white-space:nowrap;">
                         {{ \Carbon\Carbon::parse($consulta->data_hora_inicio)->format('d/m/Y H:i') }}
                     </td>
 
-                    <td style="font-size:13px;">{{ $consulta->convenio->nome ?? 'Particular' }}</td>
+                    <td>{{ $consulta->convenio->nome ?? 'Particular' }}</td>
 
                     {{-- STATUS --}}
                     <td>
-                        <form action="{{ route('consultas.update', $consulta->id) }}" method="POST">
-                            @csrf @method('PUT')
+
+                        {{-- BADGE --}}
+                        <span class="badge bg-{{ $statusColors[$consulta->status] ?? 'secondary' }}">
+                            {{ ucfirst($consulta->status) }}
+                        </span>
+
+                        {{-- SELECT --}}
+                        @if($consulta->status !== 'cancelada')
+                        <form action="{{ route('consultas.alterar_status', $consulta->id) }}" method="POST" class="mt-1">
+                            @csrf
+                            @method('PUT')
+
+                            <input type="hidden" name="tipo" value="status">
+
                             <select name="status"
                                     class="form-select form-select-sm"
-                                    onchange="this.form.submit()"
-                                    style="min-width:120px;font-size:12px;">
-                                <option value="agendada"   {{ $consulta->status == 'agendada'   ? 'selected' : '' }}>📅 Agendada</option>
-                                <option value="confirmada" {{ $consulta->status == 'confirmada' ? 'selected' : '' }}>✅ Confirmada</option>
-                                <option value="realizada"  {{ $consulta->status == 'realizada'  ? 'selected' : '' }}>🏁 Realizada</option>
-                                <option value="cancelada"  {{ $consulta->status == 'cancelada'  ? 'selected' : '' }}>❌ Cancelada</option>
+                                    onchange="this.form.submit()">
+
+                                <option value="agendada"   {{ $consulta->status == 'agendada' ? 'selected' : '' }}>Agendada</option>
+                                <option value="confirmada" {{ $consulta->status == 'confirmada' ? 'selected' : '' }}>Confirmada</option>
+                                <option value="realizada"  {{ $consulta->status == 'realizada' ? 'selected' : '' }}>Realizada</option>
+                                <option value="cancelada"  {{ $consulta->status == 'cancelada' ? 'selected' : '' }}>Cancelada</option>
+
                             </select>
                         </form>
+                        @endif
+
                     </td>
 
                     {{-- PAGAMENTO --}}
                     <td>
-                        @if($consulta->pago)
-                            <span class="badge bg-success"><i class="bi bi-check2 me-1"></i>Pago</span>
+
+                        @if($consulta->status === 'cancelada')
+                            <span class="badge bg-secondary">Indisponível</span>
+
+                        @elseif($consulta->pago == 1)
+                            <span class="badge bg-success">
+                                <i class="bi bi-check2 me-1"></i>Pago
+                            </span>
+
                         @else
-                            <form action="{{ route('consultas.update', $consulta->id) }}" method="POST">
-                                @csrf @method('PUT')
+                            <form action="{{ route('consultas.confirmar_pagamento', $consulta->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+
+                                <input type="hidden" name="tipo" value="pagamento">
                                 <input type="hidden" name="pago" value="1">
-                                <button class="btn btn-sm btn-outline-success" style="font-size:12px;">
-                                    <i class="bi bi-cash me-1"></i>Confirmar
+
+                                <button class="btn btn-sm btn-outline-success">
+                                    Confirmar
                                 </button>
                             </form>
                         @endif
+
                     </td>
 
                     {{-- AÇÕES --}}
                     <td class="text-end">
                         <a href="{{ route('consultas.edit', $consulta->id) }}"
-                           class="btn btn-sm btn-outline-primary me-1">
+                           class="btn btn-sm btn-outline-primary">
                            <i class="bi bi-pencil"></i>
                         </a>
-                        <form action="{{ route('consultas.destroy', $consulta->id) }}" method="POST" class="d-inline"
+
+                        <form action="{{ route('consultas.destroy', $consulta->id) }}"
+                              method="POST"
+                              class="d-inline"
                               onsubmit="return confirm('Excluir esta consulta?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </form>
                     </td>
+
                 </tr>
+
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-5">
-                        <i class="bi bi-calendar-x" style="font-size:32px;color:#d1d5db;display:block;margin-bottom:8px;"></i>
-                        <span class="text-muted">Nenhuma consulta encontrada.</span>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Nenhuma consulta encontrada.
                     </td>
                 </tr>
                 @endforelse
@@ -180,10 +222,11 @@
     </div>
 
     @if($consultas->hasPages())
-    <div class="card-footer bg-transparent border-top px-4 py-3" style="border-color:#f0f3f7!important;">
+    <div class="card-footer">
         {{ $consultas->withQueryString()->links() }}
     </div>
     @endif
+
 </div>
 
 @endsection

@@ -27,6 +27,7 @@ class StoreConsultaRequest extends FormRequest
             'medico_id' => 'required|exists:medicos,id',
             'paciente_id' => 'required|exists:pacientes,id',
             'convenio_id' => 'nullable|exists:convenios,id',
+            'status' => 'nullable|in:agendada,confirmada,realizada,cancelada,faltou',
             'observacoes' => 'nullable|string',
         ];
     }

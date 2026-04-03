@@ -28,15 +28,23 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
     {
 
 
+        try{
+            $user = $this->userService->criarUsuario($request->only([
+                'name', 'email', 'password', 'nome', 'endereco', 'telefone', 'cnpj'
+            ]));
+        } catch (\Exception $e) {
+            return redirect()->route('register')->with('error', 'Erro ao criar conta: ' . $e->getMessage());
+        }
 
-        $user = $this->userService->criarUsuario($request->only([
-            'name', 'email', 'password', 'nome', 'endereco', 'telefone', 'cnpj'
-        ]));
+        try{
+            Auth::login($user);
+        } catch (\Exception $e) {
+            return redirect()->route('login')->with('error', 'Erro ao logar após registro: ' . $e->getMessage());
+        }
 
-        Auth::login($user);
 
 
-        return redirect()->route('admin.index')
+        return redirect()->route('dashboard_split')
             ->with('success', 'Conta criada com sucesso!');
     }
 
@@ -52,8 +60,13 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
+            try{
+                $user = Auth::user();
+            } catch (\Exception $e) {
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Erro ao recuperar usuário autenticado: ' . $e->getMessage());
+            }
 
-            $user = Auth::user();
 
             switch ($user->role) {
                 case 'admin':

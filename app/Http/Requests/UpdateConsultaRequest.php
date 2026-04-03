@@ -22,12 +22,14 @@ class UpdateConsultaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'data_hora_inicio' => 'required|date',
-            'data_hora_fim' => 'required|date|after:data_hora_inicio',
-            'valor' => 'required|numeric|min:0',
-            'medico_id' => 'required|exists:medicos,id',
-            'paciente_id' => 'required|exists:pacientes,id',
+            'data_hora_inicio' => 'nullable|date_format:Y-m-d\TH:i',
+            'data_hora_fim' => 'nullable|date_format:Y-m-d\TH:i|after:data_hora_inicio',
+            'valor' => 'nullable|numeric|min:0',
+            'medico_id' => 'nullable|exists:medicos,id',
+            'paciente_id' => 'nullable|exists:pacientes,id',
             'convenio_id' => 'nullable|exists:convenios,id',
+            'status' => 'nullable|in:agendada,confirmada,realizada,cancelada,faltou',
+            'pago' => 'nullable|string|in:0,1',
             'observacoes' => 'nullable|string',
         ];
     }
