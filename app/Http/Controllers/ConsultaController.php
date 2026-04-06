@@ -10,17 +10,21 @@ use App\Models\Convenio;
 use App\Models\Especialidade;
 use App\Http\Requests\StoreConsultaRequest;
 use App\Http\Requests\UpdateConsultaRequest;
+use App\Models\Clinica;
 use App\Services\ConsultaService;
+use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Auth;
 
 class ConsultaController extends Controller
 {
     protected ConsultaService $consultaService;
+    protected WhatsAppService $whatsAppService;
     
 
-    public function __construct(ConsultaService $consultaService)
+    public function __construct(ConsultaService $consultaService, WhatsAppService $whatsAppService)
     {
         $this->consultaService = $consultaService;
+        $this->whatsAppService = $whatsAppService;
     }
 
     /*
@@ -139,7 +143,19 @@ class ConsultaController extends Controller
             'observacoes',
         ]);
         $dados['clinica_id'] = Auth::user()->clinica_id;
+
         $this->consultaService->criarConsulta($dados);
+
+        $paciente = Paciente::find($dados['paciente_id']);
+
+        $medico = Medico::find($dados['medico_id']);
+
+        $clinica = Clinica::find(Auth::user()->clinica_id)->endereco;
+
+        $mensagem = "Olá {$paciente->nome}, sua consulta com o Dr. {$medico->nome} foi agendada para o dia {$dados['data_hora_inicio']}, no valor de R$ {$dados['valor']}.
+        endereço da clínica: {$clinica}. Por favor, chegue com 15 minutos de antecedência. Obrigado!";
+
+        $this->whatsAppService->sendMessage($paciente->telefone, $mensagem);
 
         return redirect()
             ->route('consultas.list')

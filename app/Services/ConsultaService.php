@@ -11,12 +11,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\http\RedirectResponse;
 use Exception;
 use Illuminate\Support\Facades\DB;
-
+use App\Services\WhatsAppService;
+use App\Models\Clinica;
 
 
 class ConsultaService
 {
-
+    protected WhatsAppService $whatsAppService;
+    public function __construct(WhatsAppService $whatsAppService)
+    {
+        $this->whatsAppService = $whatsAppService;
+    }
     protected function validarConflitos(array $dados, ?Consulta $consulta = null): void
     {
         $dataInicio = \Carbon\Carbon::parse($dados['data_hora_inicio']);
@@ -128,14 +133,26 @@ class ConsultaService
     }
     public function criarConsulta(array $dados): Consulta
     {
+        
         return DB::transaction(function () use ($dados) {
-
+            $clinica = Clinica::find(Auth::user()->clinica_id);
             $this->validarConflitos($dados);
 
             $dados['valor'] = $this->calcularPreco($dados);
 
-            return Consulta::create($dados);
+            $Consulta = Consulta::create($dados);
+            if(!$Consulta){
+                throw new Exception('Erro ao criar consulta.');
+            }else{
+
+
+                $mensagem = "Olá {$Consulta->paciente->nome}, sua consulta com o Dr. {$dados['medico_id']} foi agendada para o dia {$dados['data_hora_inicio']}, no valor de R$ {$dados['valor']}.
+                endereço da clínica: {$clinica->endereco}. Por favor, chegue com 15 minutos de antecedência. Obrigado!";
+
+            
+            }    $this->whatsAppService->sendMessage($Consulta->paciente->telefone, $mensagem);
         });
+
     }
     public function atualizarConsulta(Consulta $consulta, array $dados): Consulta
     {
@@ -162,5 +179,28 @@ class ConsultaService
     {
 
         $consulta->delete();
+    }
+    public function listarConsultas(array $filtros = [])
+    {
+        $query = Consulta::with(['paciente', 'medico', 'convenio'])
+            ->where('clinica_id', Auth::user()->clinica_id);
+
+        if (!empty($filtros['data_inicio'])) {
+            $query->whereDate('data_hora_inicio', '>=', Carbon::parse($filtros['data_inicio'])->startOfDay());
+        }
+        if (!empty($filtros['data_fim'])) {
+            $query->whereDate('data_hora_inicio', '<=', Carbon::parse($filtros['data_fim'])->endOfDay());
+        }
+        if (!empty($filtros['medico_id'])) {
+            $query->where('medico_id', $filtros['medico_id']);
+        }
+        if (!empty($filtros['paciente_id'])) {
+            $query->where('paciente_id', $filtros['paciente_id']);
+        }
+        if (!empty($filtros['status'])) {
+            $query->where('status', $filtros['status']);
+        }
+
+        return $query->orderBy('data_hora_inicio')->get();
     }
 }
