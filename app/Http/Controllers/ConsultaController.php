@@ -13,18 +13,18 @@ use App\Http\Requests\UpdateConsultaRequest;
 use App\Models\Clinica;
 use App\Services\ConsultaService;
 use App\Services\WhatsAppService;
-use Illuminate\Support\Facades\Auth;
+
 
 class ConsultaController extends Controller
 {
     protected ConsultaService $consultaService;
-    protected WhatsAppService $whatsAppService;
+
     
 
     public function __construct(ConsultaService $consultaService, WhatsAppService $whatsAppService)
     {
         $this->consultaService = $consultaService;
-        $this->whatsAppService = $whatsAppService;
+
     }
 
     /*
@@ -35,7 +35,7 @@ class ConsultaController extends Controller
 
     public function index(Request $request)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $query = Consulta::with(['paciente', 'medico', 'convenio'])
             ->where('clinica_id', $clinicaId);
@@ -63,7 +63,7 @@ class ConsultaController extends Controller
 
     public function list(Request $request)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $query = Consulta::with(['paciente', 'medico', 'convenio'])
             ->where('clinica_id', $clinicaId)
@@ -113,7 +113,7 @@ class ConsultaController extends Controller
 
     public function create()
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         return view('consultas.create', [
             'pacientes' => Paciente::where('clinica_id', $clinicaId)->get(),
@@ -142,20 +142,11 @@ class ConsultaController extends Controller
             'status',
             'observacoes',
         ]);
-        $dados['clinica_id'] = Auth::user()->clinica_id;
+        $dados['clinica_id'] = $this->clinicaId;
 
         $this->consultaService->criarConsulta($dados);
 
-        $paciente = Paciente::find($dados['paciente_id']);
 
-        $medico = Medico::find($dados['medico_id']);
-
-        $clinica = Clinica::find(Auth::user()->clinica_id)->endereco;
-
-        $mensagem = "Olá {$paciente->nome}, sua consulta com o Dr. {$medico->nome} foi agendada para o dia {$dados['data_hora_inicio']}, no valor de R$ {$dados['valor']}.
-        endereço da clínica: {$clinica}. Por favor, chegue com 15 minutos de antecedência. Obrigado!";
-
-        $this->whatsAppService->sendMessage($paciente->telefone, $mensagem);
 
         return redirect()
             ->route('consultas.list')
@@ -170,11 +161,11 @@ class ConsultaController extends Controller
 
     public function show(string $id)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::with(['paciente', 'medico', 'convenio'])
             ->where('id', $id)
-            ->where('clinica_id', $clinicaId)
+            ->where('clinica_id', $this->clinicaId)
             ->firstOrFail();
 
         return view('consultas.show', compact('consulta'));
@@ -188,7 +179,7 @@ class ConsultaController extends Controller
 
     public function edit(string $id)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::where('id', $id)
             ->where('clinica_id', $clinicaId)
@@ -211,7 +202,7 @@ class ConsultaController extends Controller
 
     public function update(UpdateConsultaRequest $request, string $id)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::where('id', $id)
             ->where('clinica_id', $clinicaId)
@@ -230,7 +221,7 @@ class ConsultaController extends Controller
 
     public function confirmarPagamento(string $id)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::where('id', $id)
             ->where('clinica_id', $clinicaId)
@@ -244,7 +235,7 @@ class ConsultaController extends Controller
     }
     public function alterarStatus(string $id, string $status)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::where('id', $id)
             ->where('clinica_id', $clinicaId)
@@ -264,7 +255,7 @@ class ConsultaController extends Controller
 
     public function destroy(string $id)
     {
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::where('id', $id)
             ->where('clinica_id', $clinicaId)

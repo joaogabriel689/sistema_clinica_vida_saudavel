@@ -26,10 +26,10 @@ class ConsultaService
     {
         $dataInicio = \Carbon\Carbon::parse($dados['data_hora_inicio']);
         $dataFim = \Carbon\Carbon::parse($dados['data_hora_fim']);
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = $dados['clinica_id'] ?? Auth::user()->clinica_id;
 
         if ($dataInicio < now() || $dataFim < now()) {
-            abort(422, 'A data e hora da consulta devem ser futuras.');
+            throw new Exception('Consultas não podem ser agendadas no passado.');
         }
         if ($dataInicio->diffInMinutes($dataFim) < 10) {
             throw new Exception('Consulta muito curta.');
@@ -49,7 +49,7 @@ class ConsultaService
             ->first();
 
         if (!$medico || !$paciente) {
-            abort(403, 'Dados inválidos para esta clínica.');
+            throw new Exception('Dados inválidos para esta clínica.');
         }
 
         /*
@@ -62,7 +62,7 @@ class ConsultaService
             $dataInicio->format('H:i') < $medico->horario_inicio ||
             $dataFim->format('H:i') > $medico->horario_fim
         ) {
-            abort(422, 'Fora do horário de atendimento do médico.');
+            throw new Exception('Consulta fora do horário de atendimento do médico.');
         }
 
         /*
@@ -87,7 +87,7 @@ class ConsultaService
             ->exists();
 
         if ($conflitoMedico) {
-            abort(422, 'O médico já possui consulta nesse horário.');
+            throw new Exception('O médico já possui consulta nesse horário.');
         }
 
         /*
@@ -112,7 +112,7 @@ class ConsultaService
             ->exists();
 
         if ($conflitoPaciente) {
-            abort(422, 'O paciente já possui consulta nesse horário.');
+            throw new Exception('O paciente já possui consulta nesse horário.');
         }
     }
     protected function calcularPreco(array $dados): float
@@ -123,7 +123,7 @@ class ConsultaService
         $convenio = Convenio::find($dados['convenio_id']);
 
         if (!$convenio) {
-            abort(403, 'Dados inválidos para esta clínica.');
+            throw new Exception('Dados inválidos para esta clínica.');
         }
 
         $precoBase = $dados['valor'];
@@ -133,9 +133,10 @@ class ConsultaService
     }
     public function criarConsulta(array $dados): Consulta
     {
-        
-        return DB::transaction(function () use ($dados) {
-            $clinica = Clinica::find(Auth::user()->clinica_id);
+        $mensagem = '';
+        $Consulta = null;
+        DB::transaction(function () use ($dados, &$Consulta, &$mensagem) {
+            $clinica = Clinica::where('id', $dados['clinica_id'] ?? Auth::user()->clinica_id)->firstOrFail();
             $this->validarConflitos($dados);
 
             $dados['valor'] = $this->calcularPreco($dados);
@@ -150,8 +151,13 @@ class ConsultaService
                 endereço da clínica: {$clinica->endereco}. Por favor, chegue com 15 minutos de antecedência. Obrigado!";
 
             
-            }    $this->whatsAppService->sendMessage($Consulta->paciente->telefone, $mensagem);
+            } 
+            
+            
+            return $Consulta;  
         });
+        $this->whatsAppService->sendMessage($Consulta->paciente->telefone, $mensagem);
+        return $Consulta;
 
     }
     public function atualizarConsulta(Consulta $consulta, array $dados): Consulta

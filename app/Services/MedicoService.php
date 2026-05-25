@@ -14,13 +14,13 @@ class MedicoService
 {
     public function criarMedico(array $dados): Medico
     {
-        if(Medico::where('crm', $dados['crm'])->where('clinica_id', Auth::user()->clinica_id)->exists()) {
+        if(Medico::where('crm', $dados['crm'])->where('clinica_id', $dados['clinica_id'] ?? Auth::user()->clinica_id)->exists()) {
             throw new \Exception('CRM já cadastrado');
         }
         if(User::where('email', $dados['email'])->exists()) {
             throw new \Exception('Email já cadastrado');
         }
-        $id_clinica = Auth::user()->clinica_id;
+        $id_clinica = $dados['clinica_id'] ?? Auth::user()->clinica_id;
         DB::transaction(function () use ($id_clinica, $dados) {
 
             // Cria o usuário do médico
@@ -32,10 +32,8 @@ class MedicoService
                 'clinica_id' => $id_clinica,
             ]);
 
-            // Verifica se o usuário selecionou "Outra especialidade"
             if ($dados['especialidade'] === 'outra') {
 
-                // Cria ou encontra a especialidade
                 $especialidade = Especialidade::firstOrCreate([
                     'nome' => $dados['nova_especialidade']  
                 ]);
@@ -71,14 +69,14 @@ class MedicoService
 
             
             // Atualiza o email do usuário relacionado ao médico
-            $user = User::find($medico->user_id);
+            $user = User::where('id', $medico->user_id)->where('role', 'medico')->where('clinica_id', $medico->clinica_id)->firstOrFail();
 
             $user->update([
                 'name' => $dados['nome'],
                 'email' => $dados['email']
             ]);
 
-            // Verifica se selecionou "outra especialidade"
+
             if ($dados['especialidade'] === 'outra') {
 
                 $especialidade = Especialidade::firstOrCreate([
@@ -92,8 +90,6 @@ class MedicoService
                 $especialidadeId = $dados['especialidade'];
 
             }
-
-            // Atualiza os dados do médico
             $medico->update([
                 'nome' => $dados['nome'],
                 'crm' => $dados['crm'],

@@ -14,7 +14,7 @@ class AuditoriaMiddleware
         $metodo = $this->mapAcao($request->method());
 
         if ($request->is('auditoria*')) {
-            return $response; // Evita logar ações na própria auditoria
+            return $response; 
         }
         if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             return $next($request);

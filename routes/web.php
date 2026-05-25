@@ -139,7 +139,7 @@ Route::middleware(['auth'])->group(function () {
         */
 
         Route::prefix('pacientes')->group(function () {
-            Route::get('/pacientes', [AdminController::class, 'list_pacientes'])->name('admin.pacientes');
+            Route::get('/pacientes', [PacientesController::class, 'list_pacientes'])->name('admin.pacientes');
 
             Route::get('/create', [PacientesController::class, 'create'])->name('pacientes.create');
             Route::post('/', [PacientesController::class, 'store'])->name('pacientes.store');

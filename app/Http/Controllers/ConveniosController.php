@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 use App\Models\Convenio;
-use App\Models\Clinica;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreConvenioRequest;
 
@@ -15,7 +13,7 @@ class ConveniosController extends Controller
     {
 
         try{
-            $query = Convenio::query()->where('clinica_id', Auth::user()->clinica_id);
+            $query = Convenio::query()->where('clinica_id', $this->clinicaId);
 
             if ($request->search) {
                 $query->where('nome', 'like', '%' . $request->search . '%');
@@ -40,7 +38,7 @@ class ConveniosController extends Controller
 
 
 
-        $id_clinica = Clinica::where('user_id', Auth::id())->first()->id;
+        $id_clinica = $this->clinicaId;
 
         Convenio::create([
             'nome' => $request->nome,
@@ -57,7 +55,7 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $convenio = Convenio::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
         $convenio->delete();
 
         return redirect()->route('admin.convenios.index')->with('success', 'Convênio excluído com sucesso!');
@@ -69,7 +67,7 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $convenio = Convenio::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
         return view('convenios.edit', compact('convenio'));
 
 
@@ -77,15 +75,13 @@ class ConveniosController extends Controller
 
     public function update(StoreConvenioRequest $request, $id)
     {
-        if ($request->clinica_id != Auth::user()->clinica_id) {
-            return redirect()->route('admin.convenios.index')->with('error', 'Ação não autorizada.');
-        }
-        if(Convenio::where('codigo', $request->codigo)->where('clinica_id', Auth::user()->clinica_id)->where('id', '!=', $id)->exists()) {
+
+        if(Convenio::where('codigo', $request->codigo)->where('clinica_id', $this->clinicaId)->where('id', '!=', $id)->exists()) {
             return redirect()->route('admin.convenios.index')->with('error', 'Código já cadastrado');
         }
 
 
-        $convenio = Convenio::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $convenio = Convenio::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
 
 
 

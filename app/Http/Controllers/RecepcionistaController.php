@@ -24,7 +24,7 @@ class RecepcionistaController extends Controller
     public function index(Request $request)
     {
 
-        $query = User::where('role', 'recepcionista')->where('clinica_id', Clinica::where('user_id', Auth::id())->first()->id);
+        $query = User::where('role', 'recepcionista')->where('clinica_id', Clinica::where('id', $this->clinicaId)->first()->id);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -57,11 +57,8 @@ class RecepcionistaController extends Controller
 
   
 
-        try {
-            $id_clinica = Auth::user()->clinica_id;
-        } catch (\Exception $e) {
-            return redirect()->route('admin.recepcionistas')->with('error', 'Erro ao criar recepcionista: ' . $e->getMessage());
-        }
+
+        $id_clinica = Auth::user()->clinica_id;
         User::create([
             'name' => $request->nome,
             'email' => $request->email,
@@ -79,7 +76,7 @@ class RecepcionistaController extends Controller
     public function show(string $id)
     {
 
-        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $recepcionista = User::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
         return view('recepcionista.show', compact('recepcionista'));  
     }
 
@@ -89,7 +86,7 @@ class RecepcionistaController extends Controller
     public function edit(string $id)
     {
 
-        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $recepcionista = User::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
         return view('recepcionista.edit', compact('recepcionista'));
     }
 
@@ -100,13 +97,15 @@ class RecepcionistaController extends Controller
     {
 
 
-        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
-        $data = $request->all();
+        $recepcionista = User::where('id', $id)->where('role', 'recepcionista')->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $data = $request->only(['name', 'email', 'password']);
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
             unset($data['password']);
         }
+        unset($data['role']);
+        unset($data['clinica_id']);
         $recepcionista->update($data);
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista atualizado com sucesso.');
 
@@ -118,7 +117,7 @@ class RecepcionistaController extends Controller
     public function destroy(string $id)
     {
 
-        $recepcionista = User::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $recepcionista = User::where('id',$id)->where('role', 'recepcionista')->where('clinica_id', $this->clinicaId)->firstOrFail();
         $recepcionista->delete();
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista excluído com sucesso.');
     }
