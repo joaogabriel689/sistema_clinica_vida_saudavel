@@ -1,31 +1,43 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
+
+ENV TMPDIR=/tmp
 
 RUN apt-get update && apt-get install -y \
     curl \
     git \
     unzip \
+    zip \
     libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip \
-    && rm -rf /var/lib/apt/lists/*
+    libonig-dev \
+    libicu-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-install \
+        pdo \
+        pdo_mysql \
+        mbstring \
+        zip \
+        intl
 
+# Redis PHP Extension
+RUN pecl install redis && docker-php-ext-enable redis
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
-WORKDIR /usr/src/myapp
+WORKDIR /var/www
 
 COPY . .
 
+RUN composer install --no-interaction
 
-RUN composer install --no-interaction --no-dev --optimize-autoloader \
-    && npm install \
-    && npm run build
+RUN npm install && npm run build
 
+RUN chown -R www-data:www-data /var/www
 
+EXPOSE 9000
 
-EXPOSE 8000
-
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php-fpm"]

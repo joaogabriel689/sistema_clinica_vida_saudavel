@@ -48,9 +48,6 @@ class MedicoController extends Controller
      */
     public function create()
     {
-
-
-
         $especialidades = Especialidade::all();
         return view('medicos.create', compact('especialidades'));
     }
@@ -76,7 +73,7 @@ class MedicoController extends Controller
     {
 
         $medico = Medico::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
-        $especialidades = Especialidade::all()->where('clinica_id', $this->clinicaId);
+        $especialidades = Especialidade::where('clinica_id', $this->clinicaId)->get();
         return view('medicos.edit', compact('medico', 'especialidades'));
     }
 

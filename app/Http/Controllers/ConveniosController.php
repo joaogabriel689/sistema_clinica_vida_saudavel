@@ -34,10 +34,6 @@ class ConveniosController extends Controller
     }
     public function store(StoreConvenioRequest $request)
     {
-
-
-
-
         $id_clinica = $this->clinicaId;
 
         Convenio::create([

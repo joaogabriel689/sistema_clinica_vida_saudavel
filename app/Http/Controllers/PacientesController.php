@@ -18,7 +18,7 @@ class PacientesController extends Controller
     
     public function store(StorePacienteRequest $request)
     {
-        $id_clinica = Auth::user()->clinica_id;
+        $id_clinica = $this->clinicaId;
         Paciente::create([
             'nome' => $request->nome,
             'cpf' => $request->cpf,

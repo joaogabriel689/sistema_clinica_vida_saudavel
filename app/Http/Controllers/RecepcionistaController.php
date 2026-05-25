@@ -58,7 +58,7 @@ class RecepcionistaController extends Controller
   
 
 
-        $id_clinica = Auth::user()->clinica_id;
+        $id_clinica = $this->clinicaId;
         User::create([
             'name' => $request->nome,
             'email' => $request->email,
