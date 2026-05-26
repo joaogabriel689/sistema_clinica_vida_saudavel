@@ -135,7 +135,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware(['role:recepcionista', 'role:admin'])->group(function () {
+    Route::middleware('role:recepcionista | admin')->group(function () {
 
         Route::get('/recepcionista', [RecepcionistaController::class, 'dashboard'])->name('recepcionista.dashboard');
 

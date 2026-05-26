@@ -35,12 +35,10 @@ class ConsultaController extends Controller
 
     public function index(Request $request)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $query = Consulta::with(['paciente', 'medico', 'convenio'])
-            ->where('clinica_id', $clinicaId);
-
-        if ($request->search) {
+        $query = Consulta::with(['paciente', 'medico', 'convenio']);
+          if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->whereHas('paciente', fn($p) =>
                     $p->where('nome', 'like', "%{$request->search}%")
@@ -63,11 +61,9 @@ class ConsultaController extends Controller
 
     public function list(Request $request)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $query = Consulta::with(['paciente', 'medico', 'convenio'])
-            ->where('clinica_id', $clinicaId)
-            ->where('data_hora_inicio', '>=', now());
+        $query = Consulta::with(['paciente', 'medico', 'convenio'])            ->where('data_hora_inicio', '>=', now());
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -93,9 +89,9 @@ class ConsultaController extends Controller
 
         $consultas = $query->orderBy('data_hora_inicio')->paginate(10);
 
-        $medicos = Medico::where('clinica_id', $clinicaId)->orderBy('nome')->get();
+        $medicos = Medico::orderBy('nome')->get();
         $especialidades = Especialidade::orderBy('nome')->get();
-        $convenios = Convenio::where('clinica_id', $clinicaId)->orderBy('nome')->get();
+        $convenios = Convenio::orderBy('nome')->get();
 
         return view('consultas.list_all', compact(
             'consultas',
@@ -113,12 +109,12 @@ class ConsultaController extends Controller
 
     public function create()
     {
-        $clinicaId = $this->clinicaId;
+         
 
         return view('consultas.create', [
-            'pacientes' => Paciente::where('clinica_id', $clinicaId)->get(),
-            'medicos' => Medico::where('clinica_id', $clinicaId)->get(),
-            'convenios' => Convenio::where('clinica_id', $clinicaId)->get(),
+            'pacientes' => Paciente::orderBy('nome')->get(),
+            'medicos' => Medico::orderBy('nome')->get(),
+            'convenios' => Convenio::orderBy('nome')->get(),
             'especialidades' => Especialidade::all(),
         ]);
     }
@@ -161,11 +157,11 @@ class ConsultaController extends Controller
 
     public function show(string $id)
     {
-        $clinicaId = $this->clinicaId;
+         
 
         $consulta = Consulta::with(['paciente', 'medico', 'convenio'])
             ->where('id', $id)
-            ->where('clinica_id', $this->clinicaId)
+             
             ->firstOrFail();
         $medico = $consulta->medico;
         $paciente = $consulta->paciente;
@@ -182,17 +178,15 @@ class ConsultaController extends Controller
 
     public function edit(string $id)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $consulta = Consulta::where('id', $id)
-            ->where('clinica_id', $clinicaId)
-            ->firstOrFail();
+        $consulta = Consulta::where('id', $id)            ->firstOrFail();
 
         return view('consultas.edit', [
             'consulta' => $consulta,
-            'pacientes' => Paciente::where('clinica_id', $clinicaId)->get(),
-            'medicos' => Medico::where('clinica_id', $clinicaId)->get(),
-            'convenios' => Convenio::where('clinica_id', $clinicaId)->get(),
+            'pacientes' => Paciente::orderBy('nome')->get(),
+            'medicos' => Medico::orderBy('nome')->get(),
+            'convenios' => Convenio::orderBy('nome')->get(''),
             'especialidades' => Especialidade::all(),
         ]);
     }
@@ -205,11 +199,9 @@ class ConsultaController extends Controller
 
     public function update(UpdateConsultaRequest $request, string $id)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $consulta = Consulta::where('id', $id)
-            ->where('clinica_id', $clinicaId)
-            ->firstOrFail();
+        $consulta = Consulta::where('id', $id)->firstOrFail();
 
         // 🔹 atualização completa
         $this->consultaService->atualizarConsulta(
@@ -224,11 +216,9 @@ class ConsultaController extends Controller
 
     public function confirmarPagamento(string $id)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $consulta = Consulta::where('id', $id)
-            ->where('clinica_id', $clinicaId)
-            ->firstOrFail();
+        $consulta = Consulta::where('id', $id)            ->firstOrFail();
 
         $this->consultaService->confirmarPagamento($consulta);
 
@@ -238,11 +228,9 @@ class ConsultaController extends Controller
     }
     public function alterarStatus(string $id, $request)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $consulta = Consulta::where('id', $id)
-            ->where('clinica_id', $clinicaId)
-            ->firstOrFail();
+        $consulta = Consulta::where('id', $id)            ->firstOrFail();
 
         $status = $request->status;
 
@@ -260,11 +248,9 @@ class ConsultaController extends Controller
 
     public function destroy(string $id)
     {
-        $clinicaId = $this->clinicaId;
+         
 
-        $consulta = Consulta::where('id', $id)
-            ->where('clinica_id', $clinicaId)
-            ->firstOrFail();
+        $consulta = Consulta::where('id', $id)->firstOrFail();
 
         $consulta->delete();
 

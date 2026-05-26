@@ -24,7 +24,7 @@ class RecepcionistaController extends Controller
     public function index(Request $request)
     {
 
-        $query = User::where('role', 'recepcionista')->where('clinica_id', Clinica::where('id', $this->clinicaId)->first()->id);
+        $query = User::where('role', 'recepcionista')->first();
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -76,7 +76,7 @@ class RecepcionistaController extends Controller
     public function show(string $id)
     {
 
-        $recepcionista = User::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $recepcionista = User::where('id', $id)->firstOrFail();
         return view('recepcionista.show', compact('recepcionista'));  
     }
 
@@ -86,7 +86,7 @@ class RecepcionistaController extends Controller
     public function edit(string $id)
     {
 
-        $recepcionista = User::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $recepcionista = User::where('id', $id)->firstOrFail();
         return view('recepcionista.edit', compact('recepcionista'));
     }
 
@@ -97,7 +97,7 @@ class RecepcionistaController extends Controller
     {
 
 
-        $recepcionista = User::where('id', $id)->where('role', 'recepcionista')->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $recepcionista = User::where('id', $id)->where('role', 'recepcionista')->firstOrFail();
         $data = $request->only(['name', 'email', 'password']);
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -117,7 +117,7 @@ class RecepcionistaController extends Controller
     public function destroy(string $id)
     {
 
-        $recepcionista = User::where('id',$id)->where('role', 'recepcionista')->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $recepcionista = User::where('id',$id)->where('role', 'recepcionista')->firstOrFail();
         $recepcionista->delete();
         return redirect()->route('admin.recepcionistas')->with('success', 'Recepcionista excluído com sucesso.');
     }

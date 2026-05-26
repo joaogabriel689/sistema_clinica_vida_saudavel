@@ -25,7 +25,7 @@ class MedicoController extends Controller
     {
 
 
-        $query = Medico::with('especialidade')->where('clinica_id', $this->clinicaId);
+        $query = Medico::with('especialidade');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -72,8 +72,8 @@ class MedicoController extends Controller
     public function edit(string $id)
     {
 
-        $medico = Medico::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
-        $especialidades = Especialidade::where('clinica_id', $this->clinicaId)->get();
+        $medico = Medico::where('id', $id)->firstOrFail();
+        $especialidades = Especialidade::all();
         return view('medicos.edit', compact('medico', 'especialidades'));
     }
 
@@ -85,7 +85,7 @@ class MedicoController extends Controller
 
 
         // Busca o médico
-        $medico = Medico::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $medico = Medico::where('id', $id)->firstOrFail();
 
         $dados = $request->only([
             'nome', 'crm', 'especialidade', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
@@ -104,7 +104,7 @@ class MedicoController extends Controller
     public function destroy(string $id)
     {
         DB::transaction(function () use ($id) {
-            $medico = Medico::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+            $medico = Medico::where('id', $id)->firstOrFail();
             $user = User::find($medico->user_id);
             $medico->delete();
             if ($user) {
@@ -122,13 +122,12 @@ class MedicoController extends Controller
     public function porespecialidade($especialidadeId)
     {
         $medicos = Medico::where('especialidade_id', $especialidadeId)
-            ->where('clinica_id', $this->clinicaId)
             ->get();
         return response()->json($medicos);
     }
     public function horarios($medicoId)
     {
-        $medico = Medico::where('id', $medicoId)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $medico = Medico::where('id', $medicoId)->firstOrFail();
         return response()->json([
             'hora_inicio' => $medico->hora_inicio,
             'hora_fim' => $medico->hora_fim

@@ -13,7 +13,7 @@ class ConveniosController extends Controller
     {
 
         try{
-            $query = Convenio::query()->where('clinica_id', $this->clinicaId);
+            $query = Convenio::query();
 
             if ($request->search) {
                 $query->where('nome', 'like', '%' . $request->search . '%');
@@ -51,7 +51,7 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $convenio = Convenio::where('id', $id)->firstOrFail();
         $convenio->delete();
 
         return redirect()->route('admin.convenios.index')->with('success', 'Convênio excluído com sucesso!');
@@ -63,21 +63,21 @@ class ConveniosController extends Controller
     {
 
 
-        $convenio = Convenio::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $convenio = Convenio::where('id', $id)->firstOrFail();
         return view('convenios.edit', compact('convenio'));
 
 
     }
-
+    
     public function update(StoreConvenioRequest $request, $id)
     {
 
-        if(Convenio::where('codigo', $request->codigo)->where('clinica_id', $this->clinicaId)->where('id', '!=', $id)->exists()) {
+        if(Convenio::where('codigo', $request->codigo)->where('id', '!=', $id)->exists()) {
             return redirect()->route('admin.convenios.index')->with('error', 'Código já cadastrado');
         }
 
 
-        $convenio = Convenio::where('id', $id)->where('clinica_id', $this->clinicaId)->firstOrFail();
+        $convenio = Convenio::where('id', $id)->firstOrFail();
 
 
 

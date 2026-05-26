@@ -32,7 +32,7 @@ class PacientesController extends Controller
     public function list_pacientes()
     {
 
-        $pacientes = Paciente::where('clinica_id', $this->clinicaId)->get();
+        $pacientes = Paciente::all();
 
 
 
@@ -45,7 +45,7 @@ class PacientesController extends Controller
         $paciente = Paciente::with([
             'consultas.medico',
             'consultas.especialidade'
-        ])->where('clinica_id', $this->clinicaId)->firstOrFail($id);
+        ])->firstOrFail($id);
 
         return view('pacientes.show', compact('paciente'));
     }
@@ -53,13 +53,13 @@ class PacientesController extends Controller
     public function edit($id)
     {
 
-        $paciente = Paciente::where('clinica_id', $this->clinicaId)->firstOrFail($id);
+        $paciente = Paciente::firstOrFail($id);
         return view('pacientes.edit', compact('paciente'));
     }
     public function update(UpdatePacienteRequest $request, $id)
     {
 
-        $paciente = Paciente::where('clinica_id', $this->clinicaId)->firstOrFail($id);
+        $paciente = Paciente::firstOrFail($id);
             $paciente->update([
             'nome' => $request->nome,
             'cpf' => $request->cpf,
@@ -72,7 +72,7 @@ class PacientesController extends Controller
     public function destroy($id)
     {
 
-        $paciente = Paciente::where('clinica_id', $this->clinicaId)->firstOrFail($id);
+        $paciente = Paciente::firstOrFail($id);
         $paciente->delete();
         return redirect()->route('admin.pacientes')->with('success', 'Paciente deletado com sucesso.');
     }

@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Traits\BelongsToClinica;
 class AuditoriaModel extends Model
 {
+    use BelongsToClinica;
     protected $table = 'system_log';
 
     protected $fillable = [
