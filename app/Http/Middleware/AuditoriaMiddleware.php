@@ -17,11 +17,11 @@ class AuditoriaMiddleware
             return $response; 
         }
         if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-            return $next($request);
+            return $response;
         }
         $rotasIgnoradas = [
-            'api/medicos',
-            'medico/*/horarios'
+            'api/medicos/*',
+            'api/medico/*/horarios'
         ];
 
         foreach ($rotasIgnoradas as $rota) {

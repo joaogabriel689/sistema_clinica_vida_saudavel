@@ -125,7 +125,6 @@ class RecepcionistaController extends Controller
     public function dashboard()
     {
         $dados = $this->dashboardService->recepcionistaDashboard();
-        // Retorna a view com os dados
         return view('recepcionista.dashboard', $dados);
     }
 }

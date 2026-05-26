@@ -19,7 +19,7 @@ use App\Http\Controllers\ConsultaController;
 Route::get('/', function () {
     return view('welcome');
 })->name('index');
-// Route::middleware('throttle:10,1')->group(function () {
+Route::middleware('throttle:10,1')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::get('/login', 'login')->name('login');
         Route::post('/store_login', 'store_login')->name('auth-login');
@@ -27,7 +27,7 @@ Route::get('/', function () {
         Route::get('/register', 'register')->name('register');
         Route::post('/store_register', 'store_register')->name('auth-register');
     });
-// });
+});
 /*
 |--------------------------------------------------------------------------
 | Rotas protegidas
@@ -53,14 +53,14 @@ Route::middleware(['auth'])->group(function () {
     */
 
     Route::prefix('admin')
-        ->middleware('role:admin')
+        ->middleware(['role:admin', 'clinica.exists'])
         ->group(function () {
 
             Route::get('/', [AdminController::class, 'index'])->name('admin.index');
 
 
-            Route::get('/criar_clinica', [AdminController::class, 'criar_clinica'])->name('admin.criar_clinica');
-            Route::post('/store_clinica', [AdminController::class, 'store_clinica'])->name('admin.store_clinica');
+            Route::get('/criar_clinica', [AdminController::class, 'criar_clinica'])->name('admin.criar_clinica')->withoutMiddleware(\App\Http\Middleware\EnsureClinicaExists::class);
+            Route::post('/store_clinica', [AdminController::class, 'store_clinica'])->name('admin.store_clinica')->withoutMiddleware(\App\Http\Middleware\EnsureClinicaExists::class);
 
             /*
             |---------------- RECEPCIONISTAS ----------------|
@@ -112,6 +112,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/{id}', [ConveniosController::class, 'destroy'])->name('admin.convenios.destroy');
             });
 
+            Route::prefix('api')->group(function () {
+                Route::get('/medicos/{especialidade}', [MedicoController::class, 'porEspecialidade']);
+                Route::get('/medico/{id}/horarios', [MedicoController::class, 'horarios']);
+            });
+
         });
 
     /*
@@ -130,7 +135,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('role:recepcionista')->group(function () {
+    Route::middleware(['role:recepcionista', 'role:admin'])->group(function () {
 
         Route::get('/recepcionista', [RecepcionistaController::class, 'dashboard'])->name('recepcionista.dashboard');
 
@@ -172,15 +177,4 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-});
-
-/*
-|--------------------------------------------------------------------------
-| API interna
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('api')->group(function () {
-    Route::get('/medicos/{especialidade}', [MedicoController::class, 'porEspecialidade']);
-    Route::get('/medico/{id}/horarios', [MedicoController::class, 'horarios']);
 });

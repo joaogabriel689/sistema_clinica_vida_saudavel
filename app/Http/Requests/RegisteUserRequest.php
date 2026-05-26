@@ -31,7 +31,7 @@ class RegisteUserRequest extends FormRequest
             'nome' => 'required|string|max:255',
             'endereco' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
-            'cnpj' => 'required|string|max:20|unique:clinicas',
+            'cnpj' => ['required', \App\Rules\CnpjValido::class, 'unique:clinicas,cnpj'],
             
         ];
     }

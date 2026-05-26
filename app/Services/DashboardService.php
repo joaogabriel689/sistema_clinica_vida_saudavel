@@ -95,7 +95,7 @@ class DashboardService
         ];
     }
     public function medicoDashboard(){
-        $medico = Medico::where('user_id', Auth::id())->first()->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $medico = Medico::where('user_id', Auth::id())->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
         $agenda_medico_hoje = Consulta::where('medico_id', $medico->id)
             ->whereDate('data_hora_inicio', now()->toDateString())
             ->with('paciente')

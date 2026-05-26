@@ -29,6 +29,7 @@ class StoreConsultaRequest extends FormRequest
             'convenio_id' => 'nullable|exists:convenios,id',
             'status' => 'nullable|in:agendada,confirmada,realizada,cancelada,faltou',
             'observacoes' => 'nullable|string',
+            'valor' => 'required|numeric|min:0',
         ];
     }
 }

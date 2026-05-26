@@ -167,8 +167,11 @@ class ConsultaController extends Controller
             ->where('id', $id)
             ->where('clinica_id', $this->clinicaId)
             ->firstOrFail();
+        $medico = $consulta->medico;
+        $paciente = $consulta->paciente;
+        $convenio = $consulta->convenio;
 
-        return view('consultas.show', compact('consulta'));
+        return view('consultas.show', compact('consulta', 'medico', 'paciente', 'convenio'));
     }
 
     /*
@@ -233,13 +236,15 @@ class ConsultaController extends Controller
             ->route('consultas.list')
             ->with('success', 'Pagamento confirmado.');
     }
-    public function alterarStatus(string $id, string $status)
+    public function alterarStatus(string $id, $request)
     {
         $clinicaId = $this->clinicaId;
 
         $consulta = Consulta::where('id', $id)
             ->where('clinica_id', $clinicaId)
             ->firstOrFail();
+
+        $status = $request->status;
 
         $this->consultaService->alterarStatus($consulta, $status);
 

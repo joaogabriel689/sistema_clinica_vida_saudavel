@@ -36,6 +36,22 @@ class AdminController extends Controller
 
         return view('admin.index', $dados);
     }
+    public function criar_clinica()
+    {
+        return view('admin.criar_clinica');
+    }
+    public function store_clinica(StoreClinicaRequest $request)
+    {
+        $clinica = Clinica::create($request->validated());
+
+        User::where('id', Auth::id())->update(['clinica_id' => $clinica->id]);
+
+        return redirect()
+              ->route('admin.index')
+              ->with('success', 'Clínica criada e associada ao usuário com sucesso.');
+    }
+
+    
 
 
 

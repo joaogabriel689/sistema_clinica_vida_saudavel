@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Auth;
 
 abstract class Controller
 {
-    public $clinicaId;
+    public $clinicaId = null;
     public function __construct()
     {
-        $this->clinicaId = Auth::user()->clinica_id;
+        if (Auth::check()) {
+            $this->clinicaId = Auth::user()->clinica_id;
+        }
     }
     //
 }

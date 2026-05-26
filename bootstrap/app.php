@@ -13,13 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        // 🔹 Alias
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'auditoria' => \App\Http\Middleware\AuditoriaMiddleware::class,
+            'role'           => \App\Http\Middleware\RoleMiddleware::class,
+            'auditoria'      => \App\Http\Middleware\AuditoriaMiddleware::class,
+            'clinica.exists' => \App\Http\Middleware\EnsureClinicaExists::class,
         ]);
 
-        // 🔹 Adiciona global no grupo web
         $middleware->web(append: [
             \App\Http\Middleware\AuditoriaMiddleware::class,
         ]);
