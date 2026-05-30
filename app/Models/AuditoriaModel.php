@@ -22,6 +22,7 @@ class AuditoriaModel extends Model
         'ip',
         'user_agent',
         'data_hora',
+        'clinica_id'
 
     ];
     protected $casts = [

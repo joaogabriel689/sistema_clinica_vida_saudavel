@@ -23,6 +23,7 @@ class ConsultaController extends Controller
 
     public function __construct(ConsultaService $consultaService, WhatsAppService $whatsAppService)
     {
+        parent::__construct(); // <-- FALTAVA ISSO
         $this->consultaService = $consultaService;
 
     }

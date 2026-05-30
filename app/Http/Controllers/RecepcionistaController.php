@@ -24,7 +24,7 @@ class RecepcionistaController extends Controller
     public function index(Request $request)
     {
 
-        $query = User::where('role', 'recepcionista')->first();
+        $query = User::where('role', 'recepcionista');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {

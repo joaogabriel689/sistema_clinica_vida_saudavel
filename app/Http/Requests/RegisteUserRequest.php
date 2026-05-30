@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\CnpjValido;
 
 class RegisteUserRequest extends FormRequest
 {
@@ -31,7 +32,7 @@ class RegisteUserRequest extends FormRequest
             'nome' => 'required|string|max:255',
             'endereco' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
-            'cnpj' => ['required', \App\Rules\CnpjValido::class, 'unique:clinicas,cnpj'],
+            'cnpj' => ['required', new CnpjValido(), 'unique:clinicas,cnpj'],
             
         ];
     }

@@ -35,6 +35,10 @@ Route::middleware('throttle:10,1')->group(function () {
 */
 
 Route::middleware(['auth'])->group(function () {
+    Route::prefix('api')->group(function () {
+        Route::get('/medicos/{especialidade}', [MedicoController::class, 'porEspecialidade']);
+        Route::get('/medico/{id}/horarios', [MedicoController::class, 'horarios']);
+    });
 
     Route::get('/medicos', [MedicoController::class, 'index'])->name('admin.medicos');
     /*
@@ -112,10 +116,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/{id}', [ConveniosController::class, 'destroy'])->name('admin.convenios.destroy');
             });
 
-            Route::prefix('api')->group(function () {
-                Route::get('/medicos/{especialidade}', [MedicoController::class, 'porEspecialidade']);
-                Route::get('/medico/{id}/horarios', [MedicoController::class, 'horarios']);
-            });
+
 
         });
 
