@@ -29,9 +29,12 @@ class AuditoriaObserver
         if ($model instanceof AuditoriaModel) {
             return;
         }
+        if (!Auth::check()) {
+            return;
+        }
 
         AuditoriaModel::create([
-            'user_id' => Auth::id() ?? null,
+            'user_id' => Auth::id()?->null,
             'tipo_user' => Auth::user()->role ?? null,
 
             'acao' => $acao,

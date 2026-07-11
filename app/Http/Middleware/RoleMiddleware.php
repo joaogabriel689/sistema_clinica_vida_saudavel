@@ -16,10 +16,11 @@ class RoleMiddleware
      */
     public function handle($request, Closure $next, $role)
     {
-
-        if (Auth::user()->role !== $role) {
-            abort(403, 'Acesso não autorizado');
-        }
+        dd([
+            'auth' => Auth::check(),
+            'role_param' => $role,
+            'user_role' => Auth::user()?->role,
+        ]);
 
         return $next($request);
     }

@@ -1,61 +1,64 @@
 <?php
-namespace App\Http\Middleware;
+// namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
-use App\Models\AuditoriaModel;
-use Illuminate\Support\Facades\Auth;
+// use Closure;
+// use Illuminate\Http\Request;
+// use App\Models\AuditoriaModel;
+// use Illuminate\Support\Facades\Auth;
 
-class AuditoriaMiddleware
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $response = $next($request);
-        $metodo = $this->mapAcao($request->method());
+// class AuditoriaMiddleware
+// { 
+    // public function handle(Request $request, Closure $next)
+    // {
+    //     $response = $next($request);
+    //     $metodo = $this->mapAcao($request->method());
+    //     if(!Auth::check()) {
+    //         return $response;
+    //     }
 
-        if ($request->is('auditoria*')) {
-            return $response; 
-        }
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-            return $response;
-        }
-        $rotasIgnoradas = [
-            'api/medicos/*',
-            'api/medico/*/horarios'
-        ];
+    //     if ($request->is('auditoria*')) {
+    //         return $response; 
+    //     }
+    //     if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+    //         return $response;
+    //     }
+    //     $rotasIgnoradas = [
+    //         'api/medicos/*',
+    //         'api/medico/*/horarios'
+    //     ];
 
-        foreach ($rotasIgnoradas as $rota) {
-            if ($request->is($rota)) {
-                return $response;
-            }
-        }
-        if (Auth::check()) {
+    //     foreach ($rotasIgnoradas as $rota) {
+    //         if ($request->is($rota)) {
+    //             return $response;
+    //         }
+    //     }
+    //     // if (Auth::check()) {
+            
+    //     //     AuditoriaModel::create([
+    //     //         'user_id' => Auth::id(),
+    //     //         'tipo_user' => Auth::user()->role ?? null,
+    //     //         'acao' => $metodo,
 
-            AuditoriaModel::create([
-                'user_id' => Auth::id(),
-                'tipo_user' => Auth::user()->role ?? null,
-                'acao' => $metodo,
+    //     //         'rota' => $request->path(),
+    //     //         'metodo' => $request->method(),
 
-                'rota' => $request->path(),
-                'metodo' => $request->method(),
+    //     //         'ip' => $request->ip(),
+    //     //         'user_agent' => $request->userAgent(),
 
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
+    //     //         'data_hora' => now(),
+    //     //     ]);
+    //     // }
 
-                'data_hora' => now(),
-            ]);
-        }
+    //     return $response;
+    // }
 
-        return $response;
-    }
-
-    private function mapAcao($method)
-    {
-        return match($method) {
-            'POST' => 'CREATE',
-            'PUT', 'PATCH' => 'UPDATE',
-            'DELETE' => 'DELETE',
-            default => 'VIEW'
-        };
-    }
-}
+//     private function mapAcao($method)
+//     {
+//         return match($method) {
+//             'POST' => 'CREATE',
+//             'PUT', 'PATCH' => 'UPDATE',
+//             'DELETE' => 'DELETE',
+//             default => 'VIEW'
+//         };
+//     }
+// }

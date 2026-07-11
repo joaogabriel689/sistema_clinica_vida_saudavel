@@ -59,10 +59,19 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials, $request->remember)) {
+            dd([
+                'check' => Auth::check(),
+                'id' => Auth::id(),
+                'user' => Auth::user(),
+                'guard' => Auth::getDefaultDriver(),
+            ]);
             $request->session()->regenerate();
+
             try{
+
                 $user = Auth::user();
             } catch (\Exception $e) {
+                dd('exception FUNCIONOU');
                 Auth::logout();
                 return redirect()->route('login')->with('error', 'Erro ao recuperar usuário autenticado: ' . $e->getMessage());
             }
@@ -70,8 +79,7 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
 
             switch ($user->role) {
                 case 'admin':
-                    return redirect()->intended(route('admin.index'))
-                        ->with('success', 'Bem-vindo de volta, ' . $user->name . '!');
+                dd(route('admin.index'));
 
                 case 'medico':
                     return redirect()->intended(route('medicos.dashboard'))

@@ -15,13 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role'           => \App\Http\Middleware\RoleMiddleware::class,
-            'auditoria'      => \App\Http\Middleware\AuditoriaMiddleware::class,
+            // 'auditoria'      => \App\Http\Middleware\AuditoriaMiddleware::class,
             'clinica.exists' => \App\Http\Middleware\EnsureClinicaExists::class,
         ]);
 
-        $middleware->web(append: [
-            \App\Http\Middleware\AuditoriaMiddleware::class,
-        ]);
+
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {

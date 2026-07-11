@@ -20,21 +20,22 @@ class AdminController extends Controller
     }
     public function index()
     {
-        try {
-            $dados = $this->dashboardService->adminDashboard();
-        } catch (\Exception $e) {
+        // try {
+        //     $dados = $this->dashboardService->adminDashboard();
+        // } catch (\Exception $e) {
 
-            Log::error('Erro no dashboard admin', [
-                'erro' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
+        //     Log::error('Erro no dashboard admin', [
+        //         'erro' => $e->getMessage(),
+        //         'user_id' => Auth::id()
+        //     ]);
 
-            return redirect()
-                ->route('me')
-                ->with('error', 'Erro ao carregar dashboard');
-        }
+        //     return redirect()
+        //         ->route('me')
+        //         ->with('error', 'Erro ao carregar dashboard');
+        // }
 
-        return view('admin.index', $dados);
+        // return view('admin.index', $dados);
+        return view('admin.index');
     }
     public function criar_clinica()
     {

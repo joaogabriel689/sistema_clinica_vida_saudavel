@@ -15,6 +15,13 @@ use App\Http\Controllers\ConsultaController;
 | Rotas públicas
 |--------------------------------------------------------------------------
 */
+Route::get('/teste-auth', function () {
+    return [
+        'auth' => Auth::check(),
+        'id' => Auth::id(),
+        'session' => session()->getId(),
+    ];
+});
 
 Route::get('/', function () {
     return view('welcome');
@@ -57,10 +64,12 @@ Route::middleware(['auth'])->group(function () {
     */
 
     Route::prefix('admin')
-        ->middleware(['role:admin', 'clinica.exists'])
+        ->middleware(['role:admin'])
         ->group(function () {
 
-            Route::get('/', [AdminController::class, 'index'])->name('admin.index');
+            Route::get('/', function(){
+                dd('admin chegou');
+            })->name('admin.index');
 
 
             Route::get('/criar_clinica', [AdminController::class, 'criar_clinica'])->name('admin.criar_clinica')->withoutMiddleware(\App\Http\Middleware\EnsureClinicaExists::class);
@@ -136,7 +145,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('role:recepcionista | admin')->group(function () {
+    Route::middleware('role:recepcionista, admin')->group(function () {
 
         Route::get('/recepcionista', [RecepcionistaController::class, 'dashboard'])->name('recepcionista.dashboard');
 
@@ -177,5 +186,6 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{id}', [ConsultaController::class, 'destroy'])->name('consultas.destroy');
         });
     });
+
 
 });

@@ -4,7 +4,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Clinica;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\DB;
 
 class UserService
 {
@@ -16,25 +16,29 @@ class UserService
         if(Clinica::where('cnpj', $dados['cnpj'])->exists()) {
             throw new \Exception('CNPJ já cadastrado');
         }
-        $user = User::create([
-            'name' => $dados['name'],
-            'email' => $dados['email'],
-            'password' => Hash::make($dados['password']),
-            'role' => 'admin',
-        ]);
+        $user = null;
+        DB::transaction(function() use ($dados, &$user) {
+            $user = User::create([
+                'name' => $dados['name'],
+                'email' => $dados['email'],
+                'password' => Hash::make($dados['password']),
+                'role' => 'admin',
+            ]);
 
-        $clinica = Clinica::create([
-            'nome' => $dados['nome'],
-            'endereco' => $dados['endereco'],
-            'telefone' => $dados['telefone'],
-            'cnpj' => $dados['cnpj'],
-            'user_id' => $user->id,
-        ]);
+            $clinica = Clinica::create([
+                'nome' => $dados['nome'],
+                'endereco' => $dados['endereco'],
+                'telefone' => $dados['telefone'],
+                'cnpj' => $dados['cnpj'],
+                'user_id' => $user->id,
+            ]);
 
+            $user->update([
+                'clinica_id' => $clinica->id
+            ]);
+            return $user;
+        });
 
-        $user->update([
-            'clinica_id' => $clinica->id
-        ]);
         return $user;
     }
 
