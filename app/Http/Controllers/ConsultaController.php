@@ -36,7 +36,7 @@ class ConsultaController extends Controller
 
     public function index(Request $request)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $query = Consulta::with(['paciente', 'medico', 'convenio']);
           if ($request->search) {
@@ -62,7 +62,7 @@ class ConsultaController extends Controller
 
     public function list(Request $request)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $query = Consulta::with(['paciente', 'medico', 'convenio'])            ->where('data_hora_inicio', '>=', now());
 
@@ -110,7 +110,7 @@ class ConsultaController extends Controller
 
     public function create()
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         return view('consultas.create', [
             'pacientes' => Paciente::orderBy('nome')->get(),
@@ -128,7 +128,6 @@ class ConsultaController extends Controller
 
     public function store(StoreConsultaRequest $request)
     {
-
         $dados = $request->only([
             'data_hora_inicio',
             'data_hora_fim',
@@ -139,11 +138,9 @@ class ConsultaController extends Controller
             'status',
             'observacoes',
         ]);
-        $dados['clinica_id'] = $this->clinicaId;
+        $dados['clinica_id'] = Auth::user()->resolveClinicaId();
 
         $this->consultaService->criarConsulta($dados);
-
-
 
         return redirect()
             ->route('consultas.list')
@@ -158,7 +155,7 @@ class ConsultaController extends Controller
 
     public function show(string $id)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $consulta = Consulta::with(['paciente', 'medico', 'convenio'])
             ->where('id', $id)
@@ -179,7 +176,7 @@ class ConsultaController extends Controller
 
     public function edit(string $id)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $consulta = Consulta::where('id', $id)            ->firstOrFail();
 
@@ -200,7 +197,7 @@ class ConsultaController extends Controller
 
     public function update(UpdateConsultaRequest $request, string $id)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $consulta = Consulta::where('id', $id)->firstOrFail();
 
@@ -217,7 +214,7 @@ class ConsultaController extends Controller
 
     public function confirmarPagamento(string $id)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $consulta = Consulta::where('id', $id)            ->firstOrFail();
 
@@ -227,9 +224,14 @@ class ConsultaController extends Controller
             ->route('consultas.list')
             ->with('success', 'Pagamento confirmado.');
     }
-    public function alterarStatus(string $id, $request)
+    public function alterarStatus(Request $request, string $id)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
+        $status = $request->input('status');
+
+        if (!is_string($status) || $status === '') {
+            abort(422, 'Status obrigatório.');
+        }
 
         $consulta = Consulta::where('id', $id)            ->firstOrFail();
 
@@ -249,7 +251,7 @@ class ConsultaController extends Controller
 
     public function destroy(string $id)
     {
-         
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         $consulta = Consulta::where('id', $id)->firstOrFail();
 

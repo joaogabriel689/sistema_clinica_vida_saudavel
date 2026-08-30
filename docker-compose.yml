@@ -1,66 +1,385 @@
-services:
+name: clinica_vida_saudavel
 
+services:
+  # =========================================================================
+  # 1. PROXY REVERSO (Nginx)
+  # =========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: clinica_nginx
+    ports:
+      - "8080:80"
+    networks:
+      - frontend
+    volumes:
+      - ./:/var/www:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    depends_on:
+      app:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================================================
+  # 2. APLICAÇÃO PRINCIPAL (PHP 8.3 FPM - Non-Root)
+  # =========================================================================
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: clinica_app
-    restart: unless-stopped
-    working_dir: /var/www
+    networks:
+      - frontend
+      - backend
+      - banco_dados
     env_file:
       - .env
     volumes:
       - ./:/var/www
-      - /var/www/vendor
-      - /var/www/node_modules
+      - ./logs/php-fpm:/var/www/storage/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "php -v || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     depends_on:
-      - mysql
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  nginx:
-    image: nginx:latest
-    container_name: clinica_nginx
-    restart: unless-stopped
-    ports:
-      - "8000:80"
+  # =========================================================================
+  # 3. FILA REDIS (Queue Worker - Non-Root)
+  # =========================================================================
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clinica_queue_worker
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3"]
+    networks:
+      - backend
+      - banco_dados
+    env_file:
+      - .env
     volumes:
       - ./:/var/www
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
     depends_on:
-      - app
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  mysql:
-    image: mysql:8
-    container_name: clinica_mysql
-    restart: unless-stopped
+  # =========================================================================
+  # 4. EVOLUTION API (WhatsApp Engine via Docker)
+  # =========================================================================
+  evolution-api:
+    image: atendai/evolution-api:v2.1.1
+    container_name: clinica_evolution_api
+    networks:
+      - backend
+      - banco_dados
     environment:
-      MYSQL_DATABASE: clinica
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: laravel
-    ports:
-      - "3306:3306"
+      - SERVER_URL=http://evolution-api:8080
+      - AUTHENTICATION_TYPE=apikey
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-change_me_evolution_api_key}
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=mysql
+      - DATABASE_CONNECTION_URI=mysql://${MYSQL_USER:-clinica_user}:${MYSQL_PASSWORD:-clinica_password}@db:3306/evolution
+      - LOG_LEVEL=INFO
+      - DEL_INSTANCE=true
+    volumes:
+      - ./logs/evolution-api:/evolution/logs
+      - evolution_instances:/evolution/instances
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:8080/', (r) => { if (r.statusCode !== 200) process.exit(1); })\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================================================
+  # 5. CACHE & FILAS (Redis)
+  # =========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: clinica_redis
+    networks:
+      - backend
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================================================
+  # 6. BANCO DE DADOS (MySQL 8.4 - Sem Porta Publicada)
+  # =========================================================================
+  db:
+    image: mysql:8.4
+    container_name: clinica_db
+    # Nenhuma porta publicada no host para máxima segurança
+    networks:
+      - banco_dados
+    command: --mysql-native-password=ON --general_log=1 --general_log_file=/var/log/mysql/general.log --log_error=/var/log/mysql/error.log
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-clinica}
+      MYSQL_USER: ${MYSQL_USER:-clinica_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-clinica_password}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD:-backup_secret_password}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+      - ./logs/mysql:/var/log/mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  redis:
-    image: redis:latest
-    container_name: clinica_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: clinica_phpmyadmin
-    restart: unless-stopped
-    ports:
-      - "8080:80"
+  # =========================================================================
+  # 7. SERVIÇO DE BACKUP / RESTORE / TESTE DE CARGA (Alpine Cron & AB)
+  # =========================================================================
+  alpine:
+    build:
+      context: .
+      dockerfile: docker/alpine/Dockerfile
+    container_name: clinica_backup_cron
+    networks:
+      - banco_dados
+      - frontend
     environment:
-      PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_HOST: db
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-clinica}
+      MYSQL_USER: ${MYSQL_USER:-clinica_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-clinica_password}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD:-backup_secret_password}
+      BASE_URL: ${BASE_URL:-http://nginx:80/}
+    volumes:
+      - ./docker/alpine/backups:/backups
+      - ./docker/alpine/results:/results
+      - ./logs/alpine:/var/log/alpine
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     depends_on:
-      - mysql
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # =========================================================================
+  # 8. MÉTRICAS (Prometheus)
+  # =========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: clinica_prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================================================
+  # 9. COLETOR DE MÉTRICAS DE CONTAINERS (cAdvisor)
+  # =========================================================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: clinica_cadvisor
+    ports:
+      - "8081:8080"
+    networks:
+      - monitoring
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================================================
+  # 10. DASHBOARD DE MONITORAMENTO (Grafana)
+  # =========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: clinica_grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    volumes:
+      - grafana_data:/var/lib/grafana
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =========================================================================
+  # 11. ARMAZENAMENTO OBJECT STORAGE (MinIO S3)
+  # =========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: clinica_minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - frontend
+      - backend
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: clinica_minio_init
+    networks:
+      - backend
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 ${AWS_ACCESS_KEY_ID:-minioadmin} ${AWS_SECRET_ACCESS_KEY:-minioadmin};
+      /usr/bin/mc mb myminio/${AWS_BUCKET:-clinica-uploads} --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/${AWS_BUCKET:-clinica-uploads};
+      exit 0;
+      "
+
+# =========================================================================
+# REDES SEGMENTADAS
+# =========================================================================
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+  banco_dados:
+    driver: bridge
+    internal: true
+  monitoring:
+    driver: bridge
+
+# =========================================================================
+# VOLUMES PERSISTENTES NOMEADOS
+# =========================================================================
 volumes:
   mysql_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  evolution_instances:
+  minio_data:

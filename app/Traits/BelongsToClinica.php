@@ -2,33 +2,32 @@
 
 namespace App\Traits;
 
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Clinica;
+use App\Scopes\TenantScope;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 trait BelongsToClinica
 {
-    protected static function bootBelongsToClinica()
+    /**
+     * Boot the trait and register the global scope and creating event listener.
+     */
+    protected static function bootBelongsToClinica(): void
     {
-        // Filtra automaticamente pela clínica
-        static::addGlobalScope('clinica', function (Builder $builder) {
+        static::addGlobalScope(new TenantScope());
 
-            if (auth()->check()) {
-                $builder->where(
-                    'clinica_id',
-                    auth()->user()->clinica_id
-                );
-            }
-        });
-
-        // Preenche automaticamente ao criar
         static::creating(function ($model) {
-
-            if (
-                auth()->check() &&
-                empty($model->clinica_id)
-            ) {
-                $model->clinica_id =
-                    auth()->user()->clinica_id;
+            if (Auth::check() && Auth::user() && Auth::user()->clinica_id && !isset($model->clinica_id)) {
+                $model->clinica_id = Auth::user()->clinica_id;
             }
         });
+    }
+
+    /**
+     * Get the clinic associated with the model.
+     */
+    public function clinica(): BelongsTo
+    {
+        return $this->belongsTo(Clinica::class, 'clinica_id');
     }
 }

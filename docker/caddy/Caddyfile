@@ -1,0 +1,16 @@
+{
+    # Habilita emissão automática de SSL sob demanda para domínios de clientes
+    on_demand_tls {
+        ask http://app:9000/api/v1/check-domain
+    }
+}
+
+# Servidor HTTP/HTTPS com SSL Automático On-Demand
+:80, :443 {
+    tls {
+        on_demand
+    }
+
+    # Encaminha o tráfego HTTPS criptografado para o Nginx/App interno
+    reverse_proxy nginx:80
+}

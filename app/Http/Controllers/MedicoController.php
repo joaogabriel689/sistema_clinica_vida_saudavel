@@ -23,22 +23,20 @@ class MedicoController extends Controller
     }
     public function index(Request $request)
     {
+        try {
+            $query = Medico::with('especialidade')->where('clinica_id', Auth::user()->resolveClinicaId());
 
+            if ($request->search) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('nome', 'like', "%{$request->search}%")
+                        ->orWhere('crm', 'like', "%{$request->search}%");
+                });
+            }
 
-        $query = Medico::with('especialidade');
-
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-
-                $q->where('nome', 'like', "%{$request->search}%")
-                ->orWhere('crm', 'like', "%{$request->search}%")
-                ->orWhere('email', 'like', "%{$request->search}%");
-
-            });
+            $medicos = $query->paginate(10);
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard_split')->with('error', 'Erro ao carregar médicos: ' . $e->getMessage());
         }
-
-        $medicos = $query->paginate(10);
-
 
         return view('medicos.index', compact('medicos'));
     }
@@ -57,22 +55,18 @@ class MedicoController extends Controller
      */
     public function store(StoreMedicoRequest $request)
     {
-        $dados = $request->only([
-                    'nome', 'crm', 'especialidade','password', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
-                ]);
-        $dados['clinica_id'] = $this->clinicaId;
-        $this->medicoService->criarMedico($dados);
+        $this->medicoService->criarMedico($request->only([
+            'nome', 'crm', 'especialidade', 'password', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
+        ]));
 
         return redirect()
             ->route('admin.medicos')
             ->with('success', 'Médico criado com sucesso.');
     }
 
-
     public function edit(string $id)
     {
-
-        $medico = Medico::where('id', $id)->firstOrFail();
+        $medico = Medico::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
         $especialidades = Especialidade::all();
         return view('medicos.edit', compact('medico', 'especialidades'));
     }
@@ -82,12 +76,9 @@ class MedicoController extends Controller
      */
     public function update(UpdateMedicoRequest $request, $id)
     {
+        $medico = Medico::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
 
-
-        // Busca o médico
-        $medico = Medico::where('id', $id)->firstOrFail();
-
-        $dados = $request->only([
+        $this->medicoService->atualizarMedico($medico, $request->only([
             'nome', 'crm', 'especialidade', 'nova_especialidade', 'telefone', 'email', 'hora_inicio', 'hora_fim'
         ]);
         $dados['clinica_id'] = $this->clinicaId;
@@ -103,16 +94,15 @@ class MedicoController extends Controller
      */
     public function destroy(string $id)
     {
-        DB::transaction(function () use ($id) {
-            $medico = Medico::where('id', $id)->firstOrFail();
-            $user = User::find($medico->user_id);
-            $medico->delete();
-            if ($user) {
-                $user->delete();
-            }
-        });
+        $medico = Medico::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
+        $user = User::find($medico->user_id);
+        $medico->delete();
+        if ($user) {
+            $user->delete();
+        }
         return redirect()->route('admin.medicos')->with('success', 'Médico deletado com sucesso.');
     }
+
     public function dashboard()
     {
         $dados = $this->dashboardService->medicoDashboard();
@@ -121,13 +111,22 @@ class MedicoController extends Controller
 
     public function porespecialidade($especialidadeId)
     {
-        $medicos = Medico::where('especialidade_id', $especialidadeId)
-            ->get();
+        $query = Medico::where('especialidade_id', $especialidadeId);
+        if (Auth::check() && Auth::user()->resolveClinicaId()) {
+            $query->where('clinica_id', Auth::user()->resolveClinicaId());
+        }
+        $medicos = $query->get();
         return response()->json($medicos);
     }
+
     public function horarios($medicoId)
     {
-        $medico = Medico::where('id', $medicoId)->firstOrFail();
+        $query = Medico::where('id', $medicoId);
+        if (Auth::check() && Auth::user()->resolveClinicaId()) {
+            $query->where('clinica_id', Auth::user()->resolveClinicaId());
+        }
+        $medico = $query->firstOrFail();
+
         return response()->json([
             'hora_inicio' => $medico->hora_inicio,
             'hora_fim' => $medico->hora_fim

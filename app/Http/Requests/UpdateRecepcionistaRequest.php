@@ -25,6 +25,7 @@ class UpdateRecepcionistaRequest extends FormRequest
             'nome' => 'required',
             'email' => 'required|unique:users,email,' . $this->route('id'),
             'password' => 'nullable|min:8',
+            'telefone' => 'nullable|string|max:20',
         ];
     }
 }

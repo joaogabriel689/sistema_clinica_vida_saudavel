@@ -13,6 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        // 🔹 Exceções de Validação CSRF para Webhooks Externos (Asaas, Evolution API)
+        $middleware->validateCsrfTokens(except: [
+            'api/webhooks/*',
+            'api/v1/*',
+        ]);
+
+        // 🔹 Alias
         $middleware->alias([
             'role'           => \App\Http\Middleware\RoleMiddleware::class,
             // 'auditoria'      => \App\Http\Middleware\AuditoriaMiddleware::class,
@@ -23,6 +30,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->dontFlash([
+            'current_password',
+            'password',
+            'password_confirmation',
+            'cpf',
+            'token',
+            'secret',
+            'credit_card'
+        ]);
     })
     ->create();

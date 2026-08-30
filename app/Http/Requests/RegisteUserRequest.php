@@ -26,14 +26,13 @@ class RegisteUserRequest extends FormRequest
             // usuário
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            // 'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6',
 
             // clínica
             'nome' => 'required|string|max:255',
             'endereco' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
-            'cnpj' => ['required', new CnpjValido(), 'unique:clinicas,cnpj'],
-            
+            'cnpj' => 'required|string|max:20|unique:clinicas',
         ];
     }
 }

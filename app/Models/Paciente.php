@@ -8,6 +8,7 @@ use App\Traits\BelongsToClinica;
 class Paciente extends Model
 {
     use BelongsToClinica;
+
     protected $table = 'pacientes';
 
     protected $fillable = [

@@ -5,6 +5,8 @@ namespace App\Http\Requests;
 use App\Rules\CnpjValido;
 use Illuminate\Foundation\Http\FormRequest;
 
+use App\Rules\CnpjValido;
+
 class StoreClinicaRequest extends FormRequest
 {
     /**
@@ -27,7 +29,6 @@ class StoreClinicaRequest extends FormRequest
             'endereco' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
             'cnpj' => ['required', new CnpjValido(), 'unique:clinicas,cnpj'],
-
         ];
     }
 }

@@ -18,7 +18,10 @@ class PacientesController extends Controller
     
     public function store(StorePacienteRequest $request)
     {
-        $id_clinica = $this->clinicaId;
+
+
+
+        $id_clinica = Auth::user()->resolveClinicaId();
         Paciente::create([
             'nome' => $request->nome,
             'cpf' => $request->cpf,
@@ -41,26 +44,24 @@ class PacientesController extends Controller
 
     public function show($id)
     {
-
         $paciente = Paciente::with([
             'consultas.medico',
             'consultas.especialidade'
-        ])->firstOrFail($id);
+        ])->where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
 
         return view('pacientes.show', compact('paciente'));
     }
 
     public function edit($id)
     {
-
-        $paciente = Paciente::firstOrFail($id);
+        $paciente = Paciente::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
         return view('pacientes.edit', compact('paciente'));
     }
+
     public function update(UpdatePacienteRequest $request, $id)
     {
-
-        $paciente = Paciente::firstOrFail($id);
-            $paciente->update([
+        $paciente = Paciente::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
+        $paciente->update([
             'nome' => $request->nome,
             'cpf' => $request->cpf,
             'telefone' => $request->telefone,
@@ -69,10 +70,10 @@ class PacientesController extends Controller
         ]);
         return redirect()->route('admin.pacientes')->with('success', 'Paciente atualizado com sucesso.');
     }
+
     public function destroy($id)
     {
-
-        $paciente = Paciente::firstOrFail($id);
+        $paciente = Paciente::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
         $paciente->delete();
         return redirect()->route('admin.pacientes')->with('success', 'Paciente deletado com sucesso.');
     }

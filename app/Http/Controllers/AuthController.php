@@ -59,14 +59,9 @@ class AuthController extends Controller // Corrigi o nome da classe para AuthCon
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials, $request->remember)) {
-            dd([
-                'check' => Auth::check(),
-                'id' => Auth::id(),
-                'user' => Auth::user(),
-                'guard' => Auth::getDefaultDriver(),
-            ]);
-            $request->session()->regenerate();
-
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
             try{
 
                 $user = Auth::user();

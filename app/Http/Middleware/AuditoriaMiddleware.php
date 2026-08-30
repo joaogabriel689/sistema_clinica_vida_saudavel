@@ -16,16 +16,16 @@
     //         return $response;
     //     }
 
-    //     if ($request->is('auditoria*')) {
-    //         return $response; 
-    //     }
-    //     if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-    //         return $response;
-    //     }
-    //     $rotasIgnoradas = [
-    //         'api/medicos/*',
-    //         'api/medico/*/horarios'
-    //     ];
+        if ($request->is('auditoria*')) {
+            return $response; // Evita logar ações na própria auditoria
+        }
+        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            return $response;
+        }
+        $rotasIgnoradas = [
+            'api/medicos',
+            'medico/*/horarios'
+        ];
 
     //     foreach ($rotasIgnoradas as $rota) {
     //         if ($request->is($rota)) {

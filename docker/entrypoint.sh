@@ -1,35 +1,44 @@
 #!/bin/sh
 set -e
 
-echo "==> Corrigindo permissões..."
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+echo "Aguardando conexão com o banco de dados MySQL..."
+until php -r "
+try {
+    \$host = getenv('DB_HOST') ?: 'db';
+    \$port = getenv('DB_PORT') ?: '3306';
+    \$db   = getenv('DB_DATABASE') ?: 'clinica';
+    \$user = getenv('DB_USERNAME') ?: 'clinica_user';
+    \$pass = getenv('DB_PASSWORD') ?: 'clinica_password';
+    \$pdo  = new PDO(\"mysql:host=\$host;port=\$port;dbname=\$db\", \$user, \$pass);
+    exit(0);
+} catch (Exception \$e) {
+    exit(1);
+}
+"; do
+    sleep 2
+done
 
-echo "==> Criando diretórios necessários..."
-mkdir -p /var/www/storage/framework/views \
-         /var/www/storage/framework/cache/data \
-         /var/www/storage/framework/sessions \
-         /var/www/storage/logs \
-         /var/www/bootstrap/cache
+echo "Conexão com o banco de dados estabelecida com sucesso!"
 
-# Gera APP_KEY se não existir
-if [ -z "$APP_KEY" ]; then
-    echo "==> Gerando APP_KEY..."
+if [ ! -f /var/www/vendor/autoload.php ]; then
+    echo "Instalando dependências do Composer..."
+    composer install --no-interaction --prefer-dist --optimize-autoloader
+fi
+
+if [ ! -f /var/www/.env ]; then
+    echo "Criando arquivo .env..."
+    cp .env.example .env
+fi
+
+if ! grep -q "APP_KEY=base64" .env; then
+    echo "Gerando chave de aplicação (APP_KEY)..."
     php artisan key:generate --force
 fi
 
-echo "==> Limpando cache..."
-php artisan view:clear 2>/dev/null || true
-php artisan config:clear 2>/dev/null || true
-php artisan cache:clear 2>/dev/null || true
+echo "Executando migrations do banco de dados..."
+php artisan migrate --force
 
-echo "==> Rodando migrations..."
-php artisan migrate --force 2>/dev/null || true
+echo "Criando link simbólico do storage..."
+php artisan storage:link || true
 
-echo "==> Criando tabelas de sessão e cache..."
-php artisan session:table 2>/dev/null || true
-php artisan cache:table 2>/dev/null || true
-php artisan migrate --force 2>/dev/null || true
-
-echo "==> Iniciando php-fpm..."
-exec php-fpm
+exec "$@"

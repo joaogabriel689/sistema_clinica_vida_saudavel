@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'telefone',
         'clinica_id',
     ];
 
@@ -48,5 +49,37 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Resolve and return the valid clinica_id for the user, auto-creating if missing.
+     */
+    public function resolveClinicaId(): ?int
+    {
+        if ($this->clinica_id) {
+            return $this->clinica_id;
+        }
+
+        // Try finding an existing clinic owned by this user
+        $clinica = Clinica::where('user_id', $this->id)->first();
+        if ($clinica) {
+            $this->clinica_id = $clinica->id;
+            $this->save();
+            return $clinica->id;
+        }
+
+        // If no clinic exists, auto-create a default clinic for tenant isolation
+        $clinica = Clinica::create([
+            'nome' => 'Clínica ' . ($this->name ?? 'Minha Clínica'),
+            'endereco' => 'Endereço Principal',
+            'telefone' => '11999999999',
+            'cnpj' => str_pad((string)rand(10000000, 99999999), 14, '0', STR_PAD_LEFT),
+            'user_id' => $this->id,
+        ]);
+
+        $this->clinica_id = $clinica->id;
+        $this->save();
+
+        return $clinica->id;
     }
 }

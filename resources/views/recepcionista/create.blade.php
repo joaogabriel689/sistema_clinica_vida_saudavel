@@ -46,6 +46,23 @@
                 @enderror
             </div>
 
+            {{-- Telefone / WhatsApp --}}
+            <div class="mb-3">
+                <label class="form-label">Telefone / WhatsApp</label>
+                <input 
+                    type="text" 
+                    name="telefone" 
+                    class="form-control @error('telefone') is-invalid @enderror"
+                    value="{{ old('telefone') }}"
+                    placeholder="(11) 99999-9999"
+                >
+                @error('telefone')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                @enderror
+            </div>
+
             {{-- Senha --}}
             <div class="mb-4">
                 <label class="form-label">Senha</label>
