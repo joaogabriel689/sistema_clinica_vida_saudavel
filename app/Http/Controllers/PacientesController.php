@@ -23,7 +23,7 @@ class PacientesController extends Controller
 
 
 
-        $id_clinica = Auth::user()->clinica_id;
+        $id_clinica = Auth::user()->resolveClinicaId();
         Paciente::create([
             'nome' => $request->nome,
             'cpf' => $request->cpf,
@@ -37,25 +37,23 @@ class PacientesController extends Controller
 
     public function show($id)
     {
-
         $paciente = Paciente::with([
             'consultas.medico',
             'consultas.especialidade'
-        ])->findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        ])->where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
 
         return view('pacientes.show', compact('paciente'));
     }
 
     public function edit($id)
     {
-
-        $paciente = Paciente::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $paciente = Paciente::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
         return view('pacientes.edit', compact('paciente'));
     }
+
     public function update(UpdatePacienteRequest $request, $id)
     {
-
-        $paciente = Paciente::findOrFail($id);
+        $paciente = Paciente::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
         $paciente->update([
             'nome' => $request->nome,
             'cpf' => $request->cpf,
@@ -65,10 +63,10 @@ class PacientesController extends Controller
         ]);
         return redirect()->route('admin.pacientes')->with('success', 'Paciente atualizado com sucesso.');
     }
+
     public function destroy($id)
     {
-
-        $paciente = Paciente::findOrFail($id)->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $paciente = Paciente::where('id', $id)->where('clinica_id', Auth::user()->resolveClinicaId())->firstOrFail();
         $paciente->delete();
         return redirect()->route('admin.pacientes')->with('success', 'Paciente deletado com sucesso.');
     }

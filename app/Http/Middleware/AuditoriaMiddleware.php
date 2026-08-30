@@ -17,7 +17,7 @@ class AuditoriaMiddleware
             return $response; // Evita logar ações na própria auditoria
         }
         if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-            return $next($request);
+            return $response;
         }
         $rotasIgnoradas = [
             'api/medicos',

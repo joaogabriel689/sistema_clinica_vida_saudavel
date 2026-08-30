@@ -85,3 +85,6 @@ Schedule::call(function(){
 
 })->monthlyOn(6, '00:00');
 
+// Lembretes Automáticos de Consulta via WhatsApp
+Schedule::command('consultas:enviar-lembretes')->hourly();
+

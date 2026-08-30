@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,9 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('consultas', function (Blueprint $table) {
-            $table->enum('status', ['agendada', 'confirmada', 'realizada', 'cancelada', 'faltou'])->default('agendada')->change();
-        });
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE consultas MODIFY COLUMN status ENUM('agendada', 'confirmada', 'realizada', 'cancelada', 'faltou') NOT NULL DEFAULT 'agendada'");
+        }
     }
 
     /**
@@ -24,3 +25,4 @@ return new class extends Migration
         //
     }
 };
+

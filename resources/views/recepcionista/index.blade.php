@@ -90,7 +90,8 @@
                         <tr>
                             <th>Nome</th>
                             <th>Email</th>
-                            <th class="text-end" style="width:150px">Ações</th>
+                            <th>Telefone / WhatsApp</th>
+                            <th class="text-end" style="width:200px">Ações</th>
                         </tr>
                     </thead>
 
@@ -104,7 +105,20 @@
 
                             <td>{{ $recepcionista->email }}</td>
 
+                            <td>
+                                @if($recepcionista->telefone)
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-whatsapp me-1"></i> {{ $recepcionista->telefone }}
+                                    </span>
+                                @else
+                                    <span class="text-muted fs-13">Não informado</span>
+                                @endif
+                            </td>
+
                             <td class="text-end">
+                                <a href="{{ route('admin.recepcionistas.edit', $recepcionista->id) }}" class="btn btn-sm btn-outline-primary me-1">
+                                    Editar
+                                </a>
 
                                 <form action="{{ route('admin.recepcionistas.destroy', $recepcionista->id) }}"
                                       method="POST"

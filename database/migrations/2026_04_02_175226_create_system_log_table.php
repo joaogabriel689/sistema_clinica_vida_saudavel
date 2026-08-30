@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('system_log', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('tipo_user');
-            $table->string('acao');
-            $table->string('entidade');
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('tipo_user')->nullable();
+            $table->string('acao')->nullable();
+            $table->string('entidade')->nullable();
             $table->unsignedBigInteger('entidade_id')->nullable();
             $table->string('rota')->nullable();
             $table->string('metodo')->nullable();

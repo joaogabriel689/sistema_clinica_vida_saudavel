@@ -26,7 +26,7 @@ class ConsultaService
     {
         $dataInicio = \Carbon\Carbon::parse($dados['data_hora_inicio']);
         $dataFim = \Carbon\Carbon::parse($dados['data_hora_fim']);
-        $clinicaId = Auth::user()->clinica_id;
+        $clinicaId = Auth::user()->resolveClinicaId();
 
         if ($dataInicio < now() || $dataFim < now()) {
             abort(422, 'A data e hora da consulta devem ser futuras.');
@@ -133,26 +133,32 @@ class ConsultaService
     }
     public function criarConsulta(array $dados): Consulta
     {
-        
         return DB::transaction(function () use ($dados) {
-            $clinica = Clinica::find(Auth::user()->clinica_id);
+            $clinica = Clinica::find(Auth::user()->resolveClinicaId());
             $this->validarConflitos($dados);
 
             $dados['valor'] = $this->calcularPreco($dados);
 
-            $Consulta = Consulta::create($dados);
-            if(!$Consulta){
+            $consulta = Consulta::create($dados);
+            if (!$consulta) {
                 throw new Exception('Erro ao criar consulta.');
-            }else{
+            }
 
+            $medico = Medico::find($dados['medico_id']);
+            $paciente = Paciente::find($dados['paciente_id']);
+            $enderecoClinica = $clinica ? $clinica->endereco : '';
+            $medicoNome = $medico ? $medico->nome : '';
 
-                $mensagem = "Olá {$Consulta->paciente->nome}, sua consulta com o Dr. {$dados['medico_id']} foi agendada para o dia {$dados['data_hora_inicio']}, no valor de R$ {$dados['valor']}.
-                endereço da clínica: {$clinica->endereco}. Por favor, chegue com 15 minutos de antecedência. Obrigado!";
+            $mensagem = "Olá {$paciente->nome}, sua consulta com o Dr. {$medicoNome} foi agendada para o dia {$dados['data_hora_inicio']}, no valor de R$ {$dados['valor']}.\nEndereço da clínica: {$enderecoClinica}. Por favor, chegue com 15 minutos de antecedência. Obrigado!";
 
-            
-            }    $this->whatsAppService->sendMessage($Consulta->paciente->telefone, $mensagem);
+            try {
+                \App\Jobs\EnviarNotificacaoWhatsAppJob::dispatch($paciente->telefone, $mensagem, Auth::user()->resolveClinicaId());
+            } catch (Exception $e) {
+                // Log exception without failing transaction
+            }
+
+            return $consulta;
         });
-
     }
     public function atualizarConsulta(Consulta $consulta, array $dados): Consulta
     {
@@ -183,7 +189,7 @@ class ConsultaService
     public function listarConsultas(array $filtros = [])
     {
         $query = Consulta::with(['paciente', 'medico', 'convenio'])
-            ->where('clinica_id', Auth::user()->clinica_id);
+            ->where('clinica_id', Auth::user()->resolveClinicaId());
 
         if (!empty($filtros['data_inicio'])) {
             $query->whereDate('data_hora_inicio', '>=', Carbon::parse($filtros['data_inicio'])->startOfDay());

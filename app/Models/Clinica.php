@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Clinica extends Model
 {
@@ -13,8 +14,35 @@ class Clinica extends Model
         'endereco',
         'telefone',
         'cnpj',
-        'user_id'
+        'slug',
+        'custom_domain',
+        'cor_primaria',
+        'logo_url',
+        'banner_url',
+        'descricao',
+        'user_id',
+        'asaas_customer_id'
     ];
+
+    public function recepcionistas()
+    {
+        return $this->hasMany(User::class)->where('role', 'recepcionista');
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($clinica) {
+            if (empty($clinica->slug) && !empty($clinica->nome)) {
+                $baseSlug = Str::slug($clinica->nome);
+                $slug = $baseSlug;
+                $count = 1;
+                while (static::where('slug', $slug)->exists()) {
+                    $slug = $baseSlug . '-' . $count++;
+                }
+                $clinica->slug = $slug;
+            }
+        });
+    }
 
     public function medicos()
     {
@@ -30,10 +58,12 @@ class Clinica extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     public function pacientes()
     {
         return $this->hasMany(Paciente::class);
     }
+
     public function consultas()
     {
         return $this->hasMany(Consulta::class);

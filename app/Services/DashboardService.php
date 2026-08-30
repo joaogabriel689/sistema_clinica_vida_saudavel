@@ -42,12 +42,22 @@ class DashboardService
         $faturamento_mes = (clone $consultas_mes_query)->sum('valor');
        
 
-        $consultasSemana = DB::table('consultas')
-            ->selectRaw('DAYOFWEEK(data_hora_inicio) as dia_semana, COUNT(*) as total')
-            ->where('clinica_id', $clinica->id)
-            ->groupBy('dia_semana')
-            ->orderBy('dia_semana')
-            ->get();
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $consultasSemana = DB::table('consultas')
+                ->selectRaw("(CAST(strftime('%w', data_hora_inicio) AS INTEGER) + 1) as dia_semana, COUNT(*) as total")
+                ->where('clinica_id', $clinica->id)
+                ->groupBy('dia_semana')
+                ->orderBy('dia_semana')
+                ->get();
+        } else {
+            $consultasSemana = DB::table('consultas')
+                ->selectRaw('DAYOFWEEK(data_hora_inicio) as dia_semana, COUNT(*) as total')
+                ->where('clinica_id', $clinica->id)
+                ->groupBy('dia_semana')
+                ->orderBy('dia_semana')
+                ->get();
+        }
         
         $dias = [
             1 => 0,
@@ -95,18 +105,29 @@ class DashboardService
         ];
     }
     public function medicoDashboard(){
-        $medico = Medico::where('user_id', Auth::id())->first()->where('clinica_id', Auth::user()->clinica_id)->firstOrFail();
+        $clinicaId = Auth::user()->resolveClinicaId();
+        $medico = Medico::where('user_id', Auth::id())->where('clinica_id', $clinicaId)->first();
+        if (!$medico) {
+            return [
+                'agenda_medico_hoje' => collect(),
+                'proxima_consulta' => null,
+                'medico' => null
+            ];
+        }
         $agenda_medico_hoje = Consulta::where('medico_id', $medico->id)
+            ->where('clinica_id', $clinicaId)
             ->whereDate('data_hora_inicio', now()->toDateString())
             ->with('paciente')
             ->orderBy('data_hora_inicio')
-            ->get()->where('clinica_id', Auth::user()->clinica_id);
+            ->get();
 
         $proxima_consulta = Consulta::where('medico_id', $medico->id)
+            ->where('clinica_id', $clinicaId)
             ->where('data_hora_inicio', '>', now())
             ->with('paciente')
             ->orderBy('data_hora_inicio')
             ->first();
+
         $dados = [
             'agenda_medico_hoje' => $agenda_medico_hoje,
             'proxima_consulta' => $proxima_consulta,
@@ -115,26 +136,27 @@ class DashboardService
         return $dados;
     }
     public function recepcionistaDashboard(){
+        $clinicaId = Auth::user()->resolveClinicaId();
         // Quantidade total de pacientes cadastrados
-        $quantidade_pacientes = Paciente::where('clinica_id', Auth::user()->clinica_id)->count();
+        $quantidade_pacientes = Paciente::where('clinica_id', $clinicaId)->count();
 
         // Quantidade de médicos cadastrados
-        $quantidade_medicos = Medico::where('clinica_id', Auth::user()->clinica_id)->count();
+        $quantidade_medicos = Medico::where('clinica_id', $clinicaId)->count();
 
         // Quantidade de consultas marcadas para hoje
-        $quantidade_consultas_hoje = Consulta::where('clinica_id', Auth::user()->clinica_id)->whereDate(
+        $quantidade_consultas_hoje = Consulta::where('clinica_id', $clinicaId)->whereDate(
             'data_hora_inicio',
             now()->toDateString()
         )->count();
 
         // Últimos 5 pacientes cadastrados
-        $pacientes_recentes = Paciente::where('clinica_id', Auth::user()->clinica_id)->latest()
+        $pacientes_recentes = Paciente::where('clinica_id', $clinicaId)->latest()
             ->take(5)
             ->get();
 
         // Consultas de hoje (com médico e paciente)
         $agendas_hoje = Consulta::with(['medico', 'paciente'])
-            ->where('clinica_id', Auth::user()->clinica_id)
+            ->where('clinica_id', $clinicaId)
             ->whereDate('data_hora_inicio', now()->toDateString())
             ->orderBy('data_hora_inicio')
             ->get();

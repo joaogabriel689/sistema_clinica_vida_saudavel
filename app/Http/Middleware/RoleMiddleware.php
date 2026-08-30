@@ -14,10 +14,15 @@ class RoleMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle($request, Closure $next, $role)
+    public function handle($request, Closure $next, string ...$roles): Response
     {
+        if (!Auth::check()) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Você precisa estar logado para acessar esta página.',
+            ]);
+        }
 
-        if (Auth::user()->role !== $role) {
+        if (!in_array(Auth::user()->role, $roles, true)) {
             abort(403, 'Acesso não autorizado');
         }
 

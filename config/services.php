@@ -43,4 +43,18 @@ return [
         'client_token' => env('CLIENTE_TOKEN_Z_API'),
     ],
 
+    'evolution' => [
+        'url' => env('EVOLUTION_API_URL', 'http://evolution-api:8080'),
+        'api_key' => env('EVOLUTION_API_KEY', 'change_me_evolution_api_key'),
+    ],
+
+    'asaas' => [
+        'api_key' => env('ASAAS_API_KEY'),
+        'webhook_token' => env('ASAAS_WEBHOOK_TOKEN'),
+        'environment' => env('ASAAS_ENVIRONMENT', 'sandbox'),
+        'url' => env('ASAAS_ENVIRONMENT', 'sandbox') === 'production' 
+            ? 'https://api.asaas.com/v3' 
+            : 'https://sandbox.asaas.com/api/v3',
+    ],
+
 ];

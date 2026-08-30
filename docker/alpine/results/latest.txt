@@ -1,0 +1,159 @@
+==========================================
+TESTE DE CARGA DE APLICAÇÃO (Apache Bench)
+Alvo: http://nginx:80/
+Data: Sun Aug 30 02:10:10 UTC 2026
+==========================================
+\n--- Rodada 1: 100 requisições / 5 concorrentes ---
+This is ApacheBench, Version 2.3 <$Revision: 1923142 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking nginx (be patient).....done
+
+
+Server Software:        nginx
+Server Hostname:        nginx
+Server Port:            80
+
+Document Path:          /
+Document Length:        150 bytes
+
+Concurrency Level:      5
+Time taken for tests:   0.092 seconds
+Complete requests:      100
+Failed requests:        0
+Non-2xx responses:      100
+Total transferred:      49900 bytes
+HTML transferred:       15000 bytes
+Requests per second:    1088.36 [#/sec] (mean)
+Time per request:       4.594 [ms] (mean)
+Time per request:       0.919 [ms] (mean, across all concurrent requests)
+Transfer rate:          530.37 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   7.0      0      71
+Processing:     0    3  13.9      1      71
+Waiting:        0    3  13.8      1      71
+Total:          0    4  15.4      1      71
+
+Percentage of the requests served within a certain time (ms)
+  50%      1
+  66%      1
+  75%      1
+  80%      1
+  90%      1
+  95%     71
+  98%     71
+  99%     71
+ 100%     71 (longest request)
+\n--- Rodada 2: 1000 requisições / 20 concorrentes ---
+This is ApacheBench, Version 2.3 <$Revision: 1923142 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking nginx (be patient)
+Completed 100 requests
+Completed 200 requests
+Completed 300 requests
+Completed 400 requests
+Completed 500 requests
+Completed 600 requests
+Completed 700 requests
+Completed 800 requests
+Completed 900 requests
+Completed 1000 requests
+Finished 1000 requests
+
+
+Server Software:        nginx
+Server Hostname:        nginx
+Server Port:            80
+
+Document Path:          /
+Document Length:        150 bytes
+
+Concurrency Level:      20
+Time taken for tests:   1.561 seconds
+Complete requests:      1000
+Failed requests:        0
+Non-2xx responses:      1000
+Total transferred:      499000 bytes
+HTML transferred:       150000 bytes
+Requests per second:    640.79 [#/sec] (mean)
+Time per request:       31.212 [ms] (mean)
+Time per request:       1.561 [ms] (mean, across all concurrent requests)
+Transfer rate:          312.26 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   5.3      1      75
+Processing:     0   29  44.5      3     199
+Waiting:        0   28  43.4      2     198
+Total:          0   31  44.5      4     200
+
+Percentage of the requests served within a certain time (ms)
+  50%      4
+  66%      6
+  75%     78
+  80%     89
+  90%     94
+  95%     96
+  98%    109
+  99%    193
+ 100%    200 (longest request)
+\n--- Rodada 3: 5000 requisições / 50 concorrentes ---
+This is ApacheBench, Version 2.3 <$Revision: 1923142 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking nginx (be patient)
+Completed 500 requests
+Completed 1000 requests
+Completed 1500 requests
+Completed 2000 requests
+Completed 2500 requests
+Completed 3000 requests
+Completed 3500 requests
+Completed 4000 requests
+Completed 4500 requests
+Completed 5000 requests
+Finished 5000 requests
+
+
+Server Software:        nginx
+Server Hostname:        nginx
+Server Port:            80
+
+Document Path:          /
+Document Length:        150 bytes
+
+Concurrency Level:      50
+Time taken for tests:   7.788 seconds
+Complete requests:      5000
+Failed requests:        0
+Non-2xx responses:      5000
+Total transferred:      2495000 bytes
+HTML transferred:       750000 bytes
+Requests per second:    642.05 [#/sec] (mean)
+Time per request:       77.875 [ms] (mean)
+Time per request:       1.558 [ms] (mean, across all concurrent requests)
+Transfer rate:          312.88 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    2   1.3      2       7
+Processing:     0   75  83.2     90     885
+Waiting:        0   72  81.7     88     784
+Total:          0   77  83.4     91     885
+
+Percentage of the requests served within a certain time (ms)
+  50%     91
+  66%     97
+  75%    100
+  80%    101
+  90%    196
+  95%    204
+  98%    299
+  99%    396
+ 100%    885 (longest request)

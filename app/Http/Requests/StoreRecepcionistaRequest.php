@@ -24,7 +24,8 @@ class StoreRecepcionistaRequest extends FormRequest
         return [
             'nome' => 'required',
             'email' => 'required|unique:users',
-            'password' => 'required|min:8'
+            'password' => 'required|min:8',
+            'telefone' => 'nullable|string|max:20',
         ];
     }
 }

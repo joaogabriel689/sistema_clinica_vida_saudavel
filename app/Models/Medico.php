@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToClinica;
 
 class Medico extends Model
 {
+    use BelongsToClinica;
+
     protected $table = 'medicos';
 
     protected $fillable = [
